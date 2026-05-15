@@ -1,142 +1,172 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Neon Flight Sim | Founder: Manav Bisht</title>
+    <meta charset="UTF-8">
+    <title>Sky-Bound Simulator | Founder: Manav Bisht</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; background: #87CEEB; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
         
-        /* UI Overlay */
         #ui { 
-            position: absolute; top: 20px; left: 20px; color: #0ff; 
-            pointer-events: none; text-shadow: 0 0 10px #0ff; 
+            position: absolute; top: 20px; left: 20px; color: white; 
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7); pointer-events: none;
         }
-        #founder-tag { color: #fff; font-size: 0.8em; letter-spacing: 2px; }
+        #founder { font-size: 0.75em; letter-spacing: 3px; font-weight: bold; color: #ffd700; }
         
-        #controls { 
-            position: absolute; bottom: 20px; right: 20px; 
-            color: #f0f; background: rgba(0,0,0,0.8); 
-            padding: 15px; border: 1px solid #f0f; font-family: monospace;
+        #instrument-cluster {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(30, 30, 30, 0.8); padding: 10px 20px;
+            border-radius: 10px; border: 2px solid #555; color: #0f0;
+            font-family: monospace; display: flex; gap: 20px;
         }
 
-        /* Speedometer Bar */
-        #speed-container {
-            position: absolute; bottom: 20px; left: 20px;
-            width: 200px; height: 10px; border: 1px solid #0ff;
+        #controls-hint { 
+            position: absolute; bottom: 20px; right: 20px; 
+            color: white; background: rgba(0,0,0,0.6); 
+            padding: 15px; border-radius: 8px; font-size: 12px;
         }
-        #speed-bar { width: 50%; height: 100%; background: #0ff; box-shadow: 0 0 10px #0ff; transition: width 0.1s; }
     </style>
 </head>
 <body>
     <div id="ui">
-        <div id="founder-tag">PROJECT FOUNDER: MANAV BISHT</div>
-        <h1>NEON FLIGHT SIM v1.0</h1>
-        <p id="stats">ALTITUDE: 0 | SPEED: 0.5</p>
+        <div id="founder">PROJECT FOUNDER: MANAV BISHT</div>
+        <h1>SKY-BOUND SIMULATOR v2.0</h1>
     </div>
 
-    <div id="speed-container"><div id="speed-bar"></div></div>
-
-    <div id="controls">
-        CONTROLS:<br>
-        W/S - Pitch | A/D - Roll<br>
-        Q/E - Yaw | SPACE - TURBO<br><br>
-        CUSTOMIZE:<br>
-        [1] Cyan | [2] Red | [3] Wide | [4] Slim
+    <div id="instrument-cluster">
+        <div>ALT: <span id="alt-val">0</span>ft</div>
+        <div>SPD: <span id="spd-val">0</span>mph</div>
+        <div>HDG: <span id="hdg-val">0</span>°</div>
     </div>
 
-    <!-- Loading Three.js from CDN (No Install) -->
+    <div id="controls-hint">
+        W/S: Pitch | A/D: Roll | Q/E: Yaw<br>
+        SPACE: Engine Power | [1-3] Paint
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
     <script>
-        // 1. SCENE SETUP
+        // 1. WORLD SETUP
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 100, 1500);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 5000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        // 2. ENVIRONMENT (Neon Grid & Fog)
-        const grid = new THREE.GridHelper(5000, 100, 0xff00ff, 0x222222);
-        scene.add(grid);
-        scene.fog = new THREE.Fog(0x000000, 50, 600);
+        // Lights
+        const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+        sun.position.set(100, 200, 100);
+        scene.add(sun);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
-        // 3. BUILD THE CUSTOM PLANE
+        // 2. TERRAIN
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(10000, 10000),
+            new THREE.MeshLambertMaterial({ color: 0x4a6741 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
+
+        // Add landmarks (Forest)
+        for(let i=0; i<300; i++) {
+            const tree = new THREE.Group();
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2), new THREE.MeshLambertMaterial({color: 0x4d2902}));
+            const leaves = new THREE.Mesh(new THREE.ConeGeometry(3, 8, 8), new THREE.MeshLambertMaterial({color: 0x1e3d14}));
+            leaves.position.y = 4;
+            tree.add(trunk);
+            tree.add(leaves);
+            tree.position.set(Math.random()*4000-2000, 1, Math.random()*4000-2000);
+            scene.add(tree);
+        }
+
+        // 3. THE AIRCRAFT
         const planeGroup = new THREE.Group();
-        
-        const bodyMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
-        const wingMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true });
+        const bodyMat = new THREE.MeshPhongMaterial({ color: 0xdddddd, shininess: 80 });
 
-        // Fuselage (Body)
-        const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.2, 4.5, 8), bodyMat);
+        // Fuselage
+        const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.2, 5, 12), bodyMat);
         fuselage.rotation.x = Math.PI / 2;
         planeGroup.add(fuselage);
 
-        // Main Wings
-        const wings = new THREE.Mesh(new THREE.BoxGeometry(6, 0.05, 1.2), wingMat);
-        wings.position.set(0, 0, 0.5);
-        planeGroup.add(wings);
+        // Wings
+        const wingMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 0.1, 1.8), bodyMat);
+        wingMesh.position.z = 0.5;
+        planeGroup.add(wingMesh);
 
-        // Tail Fin
-        const tail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.8), wingMat);
-        tail.position.set(0, 0.6, 2);
-        planeGroup.add(tail);
+        // Tail
+        const horizontalTail = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.05, 0.8), bodyMat);
+        horizontalTail.position.z = 2.2;
+        planeGroup.add(horizontalTail);
+        
+        const verticalTail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.2, 0.8), bodyMat);
+        verticalTail.position.set(0, 0.6, 2.2);
+        planeGroup.add(verticalTail);
 
         // Cockpit
-        const canopy = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true}));
-        canopy.position.set(0, 0.3, -0.8);
-        canopy.scale.z = 1.8;
+        const canopy = new THREE.Mesh(
+            new THREE.SphereGeometry(0.4, 16, 16),
+            new THREE.MeshPhongMaterial({color: 0x111111, transparent: true, opacity: 0.6})
+        );
+        canopy.position.set(0, 0.35, -0.8);
+        canopy.scale.z = 2;
         planeGroup.add(canopy);
 
+        planeGroup.position.y = 100;
         scene.add(planeGroup);
 
-        // 4. FLIGHT STATE
-        let baseSpeed = 0.5;
-        let currentSpeed = 0.5;
+        // 4. PILOT LOGIC
+        let speed = 0.8;
         const keys = {};
-
         window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
         window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
 
-        function updatePhysics() {
+        function update() {
             // Steering
-            if (keys['w']) planeGroup.rotateX(0.025);
-            if (keys['s']) planeGroup.rotateX(-0.025);
-            if (keys['a']) planeGroup.rotateZ(0.04);
-            if (keys['d']) planeGroup.rotateZ(-0.04);
-            if (keys['q']) planeGroup.rotateY(0.02);
-            if (keys['e']) planeGroup.rotateY(-0.02);
+            if (keys['w']) planeGroup.rotateX(0.02);
+            if (keys['s']) planeGroup.rotateX(-0.02);
+            if (keys['a']) planeGroup.rotateZ(0.035);
+            if (keys['d']) planeGroup.rotateZ(-0.035);
+            if (keys['q']) planeGroup.rotateY(0.015);
+            if (keys['e']) planeGroup.rotateY(-0.015);
 
-            // Turbo Mode
-            if (keys[' ']) {
-                currentSpeed = THREE.MathUtils.lerp(currentSpeed, 1.5, 0.1);
-            } else {
-                currentSpeed = THREE.MathUtils.lerp(currentSpeed, baseSpeed, 0.1);
+            // Engine
+            if (keys[' ']) speed = Math.min(speed + 0.015, 3.0);
+            else speed = Math.max(speed - 0.005, 0.4);
+
+            // Paint Jobs
+            if (keys['1']) bodyMat.color.setHex(0xdddddd); // White
+            if (keys['2']) bodyMat.color.setHex(0x222222); // Stealth
+            if (keys['3']) bodyMat.color.setHex(0xc41e3a); // Racing Red
+
+            // Physics
+            planeGroup.translateZ(-speed);
+            
+            // Ground Collision
+            if (planeGroup.position.y < 1) {
+                planeGroup.position.y = 1;
+                speed = 0;
             }
 
-            // Customization
-            if (keys['1']) fuselage.material.color.setHex(0x00ffff);
-            if (keys['2']) fuselage.material.color.setHex(0xff0000);
-            if (keys['3']) wings.scale.x = 1.5;
-            if (keys['4']) wings.scale.x = 0.8;
-
-            // Movement
-            planeGroup.translateZ(-currentSpeed);
-            
-            // UI Updates
-            document.getElementById('stats').innerText = 
-                `ALTITUDE: ${Math.floor(planeGroup.position.y)} | SPEED: ${currentSpeed.toFixed(2)}`;
-            document.getElementById('speed-bar').style.width = (currentSpeed / 1.5 * 100) + "%";
+            // HUD Data
+            document.getElementById('alt-val').innerText = Math.floor(planeGroup.position.y);
+            document.getElementById('spd-val').innerText = Math.floor(speed * 120);
+            document.getElementById('hdg-val').innerText = Math.floor((planeGroup.rotation.y * (180/Math.PI)) % 360);
         }
 
         function updateCamera() {
-            const relativeOffset = new THREE.Vector3(0, 1.8, 8);
-            const cameraOffset = relativeOffset.applyMatrix4(planeGroup.matrixWorld);
-            camera.position.lerp(cameraOffset, 0.1);
+            const camOffset = new THREE.Vector3(0, 2.5, 12);
+            const worldCam = camOffset.applyMatrix4(planeGroup.matrixWorld);
+            camera.position.lerp(worldCam, 0.1);
             camera.lookAt(planeGroup.position);
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            updatePhysics();
+            update();
             updateCamera();
             renderer.render(scene, camera);
         }
