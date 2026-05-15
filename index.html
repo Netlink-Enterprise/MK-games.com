@@ -1,1 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Neon Multi-Shooter</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="ctx"></canvas>
+    <script>
+        const canvas = document.getElementById('ctx');
+        const g = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
+        const socket = io();
+        let players = {};
+        let bullets = [];
+        let myId;
+
+        socket.on('init', (serverPlayers) => {
+            players = serverPlayers;
+            myId = socket.id;
+        });
+
+        socket.on('newPlayer', (p) => players[p.id] = p);
+        socket.on('playerMoved', (p) => players[p.id] = p);
+        socket.on('playerDisconnected', (id) => delete players[id]);
+        
+        socket.on('bulletFired', (b) => bullets.push(b));
+
+        // Controls
+        const keys = {};
+        window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
+        window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
+
+        window.onmousedown = (e) => {
+            const me = players[myId];
+            if (!me) return;
+            const angle = Math.atan2(e.clientY - me.y, e.clientX - me.x);
+            socket.emit('shoot', {
+                x: me.x, y: me.y,
+                vx: Math.cos(angle) * 12,
+                vy: Math.sin(angle) * 12,
+                color: me.color
+            });
+        };
+
+        function loop() {
+            g.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            g.fillRect(0, 0, canvas.width, canvas.height);
+
+            const me = players[myId];
+            if (me) {
+                if (keys['w']) me.y -= 5;
+                if (keys['s']) me.y += 5;
+                if (keys['a']) me.x -= 5;
+                if (keys['d']) me.x += 5;
+                socket.emit('move', { x: me.x, y: me.y });
+            }
+
+            // Draw Players
+            for (let id in players) {
+                const p = players[id];
+                g.shadowBlur = 15;
+                g.shadowColor = p.color;
+                g.fillStyle = p.color;
+                g.fillRect(p.x - 15, p.y - 15, 30, 30);
+            }
+
+            // Update/Draw Bullets
+            bullets.forEach((b, i) => {
+                b.x += b.vx; b.y += b.vy;
+                g.shadowBlur = 10;
+                g.shadowColor = '#fff';
+                g.fillStyle = '#fff';
+                g.beginPath();
+                g.arc(b.x, b.y, 4, 0, Math.PI * 2);
+                g.fill();
+                if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) bullets.splice(i, 1);
+            });
+
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>
