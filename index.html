@@ -1,91 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Neon Multi-Shooter</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <title>Neon Flight Sim</title>
     <style>
         body { margin: 0; background: #000; overflow: hidden; }
-        canvas { display: block; }
+        #ui { position: absolute; top: 20px; left: 20px; color: #0ff; font-family: monospace; }
     </style>
 </head>
 <body>
-    <canvas id="ctx"></canvas>
+    <div id="ui">W/S: Pitch | A/D: Roll | Speed: Constant</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        const canvas = document.getElementById('ctx');
-        const g = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-        const socket = io();
-        let players = {};
-        let bullets = [];
-        let myId;
+        // 1. CREATE THE WORLD (Neon Grid)
+        const grid = new THREE.GridHelper(2000, 100, 0xff00ff, 0x00ffff);
+        scene.add(grid);
 
-        socket.on('init', (serverPlayers) => {
-            players = serverPlayers;
-            myId = socket.id;
-        });
+        // 2. CREATE THE PLANE (A simple "V" shape)
+        const planeGroup = new THREE.Group();
+        const bodyGeo = new THREE.ConeGeometry(0.5, 2, 4);
+        const bodyMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.rotation.x = Math.PI / 2;
+        planeGroup.add(body);
+        scene.add(planeGroup);
 
-        socket.on('newPlayer', (p) => players[p.id] = p);
-        socket.on('playerMoved', (p) => players[p.id] = p);
-        socket.on('playerDisconnected', (id) => delete players[id]);
-        
-        socket.on('bulletFired', (b) => bullets.push(b));
-
-        // Controls
+        // 3. FLIGHT LOGIC
+        let speed = 0.5;
         const keys = {};
         window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
         window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
 
-        window.onmousedown = (e) => {
-            const me = players[myId];
-            if (!me) return;
-            const angle = Math.atan2(e.clientY - me.y, e.clientX - me.x);
-            socket.emit('shoot', {
-                x: me.x, y: me.y,
-                vx: Math.cos(angle) * 12,
-                vy: Math.sin(angle) * 12,
-                color: me.color
-            });
-        };
+        function updateFlight() {
+            // Rotation logic (Pitch and Roll)
+            if (keys['w']) planeGroup.rotateX(0.03); // Pitch up
+            if (keys['s']) planeGroup.rotateX(-0.03); // Pitch down
+            if (keys['a']) planeGroup.rotateZ(0.05); // Roll left
+            if (keys['d']) planeGroup.rotateZ(-0.05); // Roll right
 
-        function loop() {
-            g.fillStyle = 'rgba(0, 0, 0, 0.2)';
-            g.fillRect(0, 0, canvas.width, canvas.height);
+            // Constant forward movement based on where the plane is pointing
+            planeGroup.translateZ(-speed);
 
-            const me = players[myId];
-            if (me) {
-                if (keys['w']) me.y -= 5;
-                if (keys['s']) me.y += 5;
-                if (keys['a']) me.x -= 5;
-                if (keys['d']) me.x += 5;
-                socket.emit('move', { x: me.x, y: me.y });
-            }
-
-            // Draw Players
-            for (let id in players) {
-                const p = players[id];
-                g.shadowBlur = 15;
-                g.shadowColor = p.color;
-                g.fillStyle = p.color;
-                g.fillRect(p.x - 15, p.y - 15, 30, 30);
-            }
-
-            // Update/Draw Bullets
-            bullets.forEach((b, i) => {
-                b.x += b.vx; b.y += b.vy;
-                g.shadowBlur = 10;
-                g.shadowColor = '#fff';
-                g.fillStyle = '#fff';
-                g.beginPath();
-                g.arc(b.x, b.y, 4, 0, Math.PI * 2);
-                g.fill();
-                if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) bullets.splice(i, 1);
-            });
-
-            requestAnimationFrame(loop);
+            // Make the camera follow the plane
+            const relativeCameraOffset = new THREE.Vector3(0, 2, 10);
+            const cameraOffset = relativeCameraOffset.applyMatrix4(planeGroup.matrixWorld);
+            camera.position.x = cameraOffset.x;
+            camera.position.y = cameraOffset.y;
+            camera.position.z = cameraOffset.z;
+            camera.lookAt(planeGroup.position);
         }
-        loop();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            updateFlight();
+            renderer.render(scene, camera);
+        }
+        animate();
     </script>
 </body>
 </html>
