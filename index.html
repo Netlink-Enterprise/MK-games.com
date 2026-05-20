@@ -2,624 +2,117 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sky-Bound Flight Simulator | Ultimate Edition</title>
+    <title>Sky-Bound Flight Simulator | Advanced Mouse POV & Hangar</title>
     <style>
-        body {
-            margin: 0;
-            background: #000;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-            color: #fff;
-        }
-
-        /* Overlay Screens */
+        body { margin: 0; background: #020612; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        
         .overlay-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            transition: opacity 0.5s ease;
-            background: rgba(0, 0, 0, 0.9);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; transition: opacity 0.3s ease;
         }
-
+        
         #entry-screen {
             background: radial-gradient(circle at center, #0d1e36 0%, #020710 100%);
-            color: white;
-            overflow-y: auto;
-            padding: 20px 0;
-            width: 100%;
-            max-width: 1400px;
+            color: white; overflow-y: auto; padding: 20px 0;
         }
 
         #death-screen {
             background: rgba(138, 3, 3, 0.93);
-            color: white;
-            display: none;
-            backdrop-filter: blur(8px);
-            text-align: center;
+            color: white; display: none; backdrop-filter: blur(8px);
         }
 
-        #pause-menu {
-            display: none;
-            background: rgba(0, 0, 20, 0.95);
-            border: 2px solid #17b978;
-            border-radius: 10px;
-            padding: 20px;
-            max-width: 500px;
-            box-shadow: 0 0 20px rgba(23, 185, 120, 0.5);
-        }
-
-        /* Hangar Layout */
         .hangar-layout {
-            display: flex;
-            flex-direction: row;
-            gap: 20px;
-            background: rgba(6, 13, 26, 0.96);
-            border: 2px solid #1a365d;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
-            max-width: 1400px;
-            width: 95%;
-            margin: auto;
-            height: 85vh;
+            display: flex; flex-direction: row; gap: 20px;
+            background: rgba(6, 13, 26, 0.96); border: 2px solid #1a365d;
+            padding: 25px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            max-width: 1100px; width: 95%; margin: auto; height: 80vh;
         }
 
-        .panel-left {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow-y: auto;
-        }
+        .panel-left { flex: 1.8; display: flex; flex-direction: column; height: 100%; }
+        .panel-right { flex: 1.2; background: #050d1a; border: 1px solid #10223b; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto; }
 
-        .panel-right {
-            flex: 1.5;
-            background: #050d1a;
-            border: 1px solid #10223b;
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow-y: auto;
+        #founder-banner { font-size: 0.8em; letter-spacing: 4px; color: #ffd700; font-weight: bold; margin-bottom: 5px; text-align: left; }
+        h1 { margin: 0 0 15px 0; font-size: 2.1em; text-transform: uppercase; letter-spacing: 2px; text-align: left; }
+        
+        .selector-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+            gap: 10px; overflow-y: auto; flex-grow: 1; padding-right: 5px;
         }
+        
+        .selector-grid::-webkit-scrollbar, .panel-right::-webkit-scrollbar { width: 6px; }
+        .selector-grid::-webkit-scrollbar-track, .panel-right::-webkit-scrollbar-track { background: #040d1a; }
+        .selector-grid::-webkit-scrollbar-thumb, .panel-right::-webkit-scrollbar-thumb { background: #1e3d59; border-radius: 3px; }
 
-        #founder-banner {
-            font-size: 0.8em;
-            letter-spacing: 4px;
-            color: #ffd700;
-            font-weight: bold;
-            margin-bottom: 5px;
-            text-align: left;
-        }
-
-        h1 {
-            margin: 0 0 15px 0;
-            font-size: 2.1em;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-align: left;
-        }
-
-        .selector-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            overflow-y: auto;
-            flex-grow: 1;
-            padding-right: 5px;
-        }
-
-        .selector-grid::-webkit-scrollbar,
-        .panel-right::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .selector-grid::-webkit-scrollbar-track,
-        .panel-right::-webkit-scrollbar-track {
-            background: #040d1a;
-        }
-
-        .selector-grid::-webkit-scrollbar-thumb,
-        .panel-right::-webkit-scrollbar-thumb {
-            background: #1e3d59;
-            border-radius: 3px;
-        }
-
-        /* Cards */
         .card-option {
-            background: #050d1a;
-            border: 1px solid #10223b;
-            border-radius: 6px;
-            padding: 12px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
+            background: #050d1a; border: 1px solid #10223b; border-radius: 6px;
+            padding: 12px; cursor: pointer; text-align: left; transition: all 0.2s ease;
         }
+        .card-option:hover { border-color: #17b978; background: #0a1729; }
+        .card-option.active { border-color: #17b978; background: #0c253f; box-shadow: 0 0 10px rgba(23,185,120,0.25); }
+        .card-title { font-weight: bold; font-size: 1em; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .card-class { font-size: 0.65em; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .class-mil { background: #7a2222; color: #ffcccc; }
+        .class-civ { background: #226b35; color: #ccffdd; }
+        .card-desc { font-size: 0.75em; color: #8b9bb4; margin-top: 4px; line-height: 1.3; }
 
-        .card-option:hover {
-            border-color: #17b978;
-            background: #0a1729;
-            transform: translateY(-2px);
-        }
+        .section-title { font-size: 0.9em; color: #ffd700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #10223b; padding-bottom: 4px; }
+        .control-group { margin-bottom: 18px; text-align: left; }
+        .control-label { display: flex; justify-content: space-between; font-size: 0.85em; color: #fff; margin-bottom: 6px; font-weight: 500; }
+        .control-label span { color: #17b978; font-family: monospace; }
+        
+        .color-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .color-btn { background: #091526; border: 1px solid #1a365d; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 0.75em; transition: all 0.15s; text-align: center; }
+        .color-btn:hover { border-color: #17b978; }
+        .color-btn.active { background: #17b978; border-color: #17b978; color: white; font-weight: bold; }
 
-        .card-option.active {
-            border-color: #17b978;
-            background: #0c253f;
-            box-shadow: 0 0 15px rgba(23, 185, 120, 0.3);
-        }
-
-        .card-option img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 8px;
-        }
-
-        .card-title {
-            font-weight: bold;
-            font-size: 1em;
-            color: #fff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-class {
-            font-size: 0.65em;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .class-mil {
-            background: #7a2222;
-            color: #ffcccc;
-        }
-
-        .class-civ {
-            background: #226b35;
-            color: #ccffdd;
-        }
-
-        .card-desc {
-            font-size: 0.75em;
-            color: #8b9bb4;
-            margin-top: 4px;
-            line-height: 1.3;
-        }
-
-        .card-stats {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
-            font-size: 0.7em;
-            color: #17b978;
-        }
-
-        /* Controls */
-        .section-title {
-            font-size: 0.9em;
-            color: #ffd700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #10223b;
-            padding-bottom: 4px;
-        }
-
-        .control-group {
-            margin-bottom: 18px;
-            text-align: left;
-        }
-
-        .control-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85em;
-            color: #fff;
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-
-        .control-label span {
-            color: #17b978;
-            font-family: monospace;
-        }
-
-        .color-picker-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-        }
-
-        .color-btn {
-            background: #091526;
-            border: 1px solid #1a365d;
-            color: white;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.75em;
-            transition: all 0.15s;
-            text-align: center;
-        }
-
-        .color-btn:hover {
-            border-color: #17b978;
-        }
-
-        .color-btn.active {
-            background: #17b978;
-            border-color: #17b978;
-            color: white;
-            font-weight: bold;
-        }
-
-        .slider-input {
-            width: 100%;
-            -webkit-appearance: none;
-            background: #0d1e36;
-            height: 6px;
-            border-radius: 3px;
-            outline: none;
-            margin: 8px 0;
-        }
-
-        .slider-input::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #17b978;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .slider-input::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-        }
+        .slider-input { width: 100%; -webkit-appearance: none; background: #0d1e36; height: 6px; border-radius: 3px; outline: none; margin: 8px 0; }
+        .slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #17b978; cursor: pointer; transition: transform 0.1s; }
+        .slider-input::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
         .btn-main {
-            background: #17b978;
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 1.1em;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            letter-spacing: 2px;
-            transition: background 0.2s, transform 0.1s;
-            width: 100%;
-            margin-top: 10px;
+            background: #17b978; color: white; border: none; padding: 14px;
+            font-size: 1.1em; font-weight: bold; border-radius: 6px; cursor: pointer;
+            letter-spacing: 2px; transition: background 0.2s, transform 0.1s; width: 100%; margin-top: 10px;
         }
+        .btn-main:hover { background: #139c65; transform: scale(1.01); }
 
-        .btn-main:hover {
-            background: #139c65;
-            transform: scale(1.01);
-        }
-
-        .btn-secondary {
-            background: #0d1e36;
-            color: #17b978;
-            border: 1px solid #17b978;
-            padding: 10px;
-            font-size: 0.9em;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            letter-spacing: 1px;
-            transition: all 0.2s;
-            width: 100%;
-            margin-top: 8px;
-        }
-
-        .btn-secondary:hover {
-            background: #17b978;
-            color: white;
-        }
-
-        /* HUD */
-        #hud-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: none;
-        }
-
+        /* HUD MFD Glass Avionics Panels */
+        #hud-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
         #mfd-dashboard {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(2, 5, 12, 0.97);
-            border: 2px solid #1a365d;
-            border-radius: 8px;
-            width: 900px;
-            padding: 14px;
-            display: flex;
-            justify-content: space-between;
-            color: #00ff66;
-            font-family: monospace;
-            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.9);
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(2, 5, 12, 0.97); border: 2px solid #1a365d;
+            border-radius: 8px; width: 780px; padding: 14px; display: flex;
+            justify-content: space-between; color: #00ff66; font-family: monospace;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.9);
         }
+        .mfd-screen { border: 1px solid #10223b; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 4px; flex: 1; margin: 0 6px; }
+        .mfd-title { font-size: 0.8em; color: #ffd700; border-bottom: 1px solid #10223b; padding-bottom: 4px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .mfd-data { font-size: 1.25em; font-weight: bold; color: #fff; margin: 4px 0; }
+        .mfd-data span { color: #00ff66; }
 
-        .mfd-screen {
-            border: 1px solid #10223b;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 15px;
-            border-radius: 4px;
-            flex: 1;
-            margin: 0 6px;
-        }
-
-        .mfd-title {
-            font-size: 0.8em;
-            color: #ffd700;
-            border-bottom: 1px solid #10223b;
-            padding-bottom: 4px;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .mfd-data {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #fff;
-            margin: 4px 0;
-        }
-
-        .mfd-data span {
-            color: #00ff66;
-        }
-
-        #top-info {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            text-shadow: 2px 2px 4px #000;
-        }
-
-        #weapon-indicator {
-            font-weight: bold;
-            text-shadow: 0 0 8px #ff0000;
-        }
-
-        #crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #00ff66;
-            font-size: 24px;
-            font-family: monospace;
-            opacity: 0.6;
-        }
-
-        #pov-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: #00ff66;
-            font-family: monospace;
-            font-size: 0.9em;
-            text-align: right;
-            text-shadow: 1px 1px 2px #000;
-        }
-
-        #compass {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            pointer-events: none;
-            display: none;
-        }
-
-        #compass canvas {
-            width: 100%;
-            height: 100%;
-            border: 2px solid #17b978;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7);
-        }
-
-        #navigation-map {
-            position: absolute;
-            bottom: 120px;
-            right: 20px;
-            width: 300px;
-            height: 300px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #17b978;
-            border-radius: 8px;
-            display: none;
-        }
-
-        #navigation-map canvas {
-            width: 100%;
-            height: 100%;
-        }
-
-        #faults-display {
-            position: absolute;
-            top: 100px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #ff0000;
-            border-radius: 6px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 0.8em;
-            color: #ffaaaa;
-            max-width: 300px;
-            display: none;
-        }
-
-        #camera-view-indicator {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            color: #00ff66;
-            font-family: monospace;
-            font-size: 0.9em;
-            text-align: right;
-            text-shadow: 1px 1px 2px #000;
-        }
-
-        /* Airport and World Elements */
-        #world-elements {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        /* NPC and Other Planes */
-        .npc-plane {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: #ff0000;
-            border-radius: 50%;
-            pointer-events: none;
-            display: none;
-        }
-
-        /* Loading Screen */
-        #loading-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            z-index: 200;
-        }
-
-        #loading-bar {
-            width: 300px;
-            height: 30px;
-            background: #0d1e36;
-            border-radius: 4px;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-
-        #loading-progress {
-            height: 100%;
-            background: #17b978;
-            width: 0%;
-            transition: width 0.3s;
-        }
-
-        /* Walk Mode */
-        #walk-mode-ui {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 6px;
-            border: 1px solid #17b978;
-            display: none;
-            font-family: monospace;
-        }
-
-        /* Sound Controls */
-        #sound-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #17b978;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .sound-btn {
-            background: #0d1e36;
-            color: #fff;
-            border: 1px solid #17b978;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8em;
-        }
-
-        .sound-btn.active {
-            background: #17b978;
-        }
-
-        /* Tooltips */
-        .tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            pointer-events: none;
-            z-index: 1000;
-            display: none;
-        }
+        #top-info { position: absolute; top: 20px; left: 20px; color: white; text-shadow: 2px 2px 4px #000; }
+        #weapon-indicator { font-weight: bold; text-shadow: 0 0 8px #ff0000; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00ff66; font-size: 24px; font-family: monospace; opacity: 0.6; }
+        #pov-indicator { position: absolute; top: 20px; right: 20px; color: #00ff66; font-family: monospace; font-size: 0.9em; text-align: right; text-shadow: 1px 1px 2px #000; }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-        <h1 style="color: #17b978; text-shadow: 0 0 10px #17b978;">Sky-Bound Flight Simulator</h1>
-        <p style="color: #8b9bb4;">Loading Ultimate Edition...</p>
-        <div id="loading-bar">
-            <div id="loading-progress"></div>
-        </div>
-    </div>
 
-    <!-- Entry Hangar -->
+    <!-- 1. ENTRY HANGAR WITH REAL-TIME CUSTOMIZATION DECK -->
     <div id="entry-screen" class="overlay-screen">
         <div class="hangar-layout">
+            
             <div class="panel-left">
                 <div id="founder-banner">MASTER ARCHITECT: MANAV BISHT</div>
                 <h1>Hangar Fleet Selection</h1>
-                <div class="selector-grid" id="fleet-grid"></div>
+                <div id="fleet-grid" class="selector-grid"></div>
             </div>
 
             <div class="panel-right">
                 <div>
                     <div class="section-title">Airframe Customization</div>
-
+                    
                     <div class="control-group">
                         <div class="control-label">AERO LIVERY SKIN: <span id="lbl-skin">Stealth Grey</span></div>
                         <div class="color-picker-grid">
@@ -629,24 +122,12 @@
                             <div class="color-btn" onclick="setSkin('crimson', 'Crimson Elite', this)">CRIMSON</div>
                             <div class="color-btn" onclick="setSkin('blue', 'Horizon Blue', this)">BLUE</div>
                             <div class="color-btn" onclick="setSkin('white', 'Ghost White', this)">WHITE</div>
-                            <div class="color-btn" onclick="setSkin('gold', 'Golden Eagle', this)">GOLD</div>
-                            <div class="color-btn" onclick="setSkin('black', 'Midnight Black', this)">BLACK</div>
                         </div>
                     </div>
 
                     <div class="control-group">
                         <div class="control-label">WINGSPAN EXPANSION: <span id="lbl-wingspan">1.0x</span></div>
                         <input type="range" id="slider-wingspan" class="slider-input" min="0.6" max="1.8" step="0.1" value="1.0" oninput="updateWingValue(this.value)">
-                    </div>
-
-                    <div class="control-group">
-                        <div class="control-label">FLAPS DEPLOYMENT: <span id="lbl-flaps">0%</span></div>
-                        <input type="range" id="slider-flaps" class="slider-input" min="0" max="100" step="5" value="0" oninput="updateFlapsValue(this.value)">
-                    </div>
-
-                    <div class="control-group">
-                        <div class="control-label">AIRBRAKES: <span id="lbl-airbrakes">RETRACTED</span></div>
-                        <input type="range" id="slider-airbrakes" class="slider-input" min="0" max="100" step="5" value="0" oninput="updateAirbrakesValue(this.value)">
                     </div>
 
                     <div id="weapon-custom-box" class="control-group">
@@ -658,46 +139,22 @@
                             <div class="color-btn" onclick="setLaser('magenta', 'Proton Purple', this)">PURPLE</div>
                         </div>
                     </div>
-
-                    <div class="control-group">
-                        <div class="control-label">CAMERA VIEW: <span id="lbl-camera-view">COCKPIT</span></div>
-                        <div class="color-picker-grid" style="grid-template-columns: repeat(3, 1fr);">
-                            <div class="color-btn active" onclick="setCameraView('cockpit', 'COCKPIT', this)">COCKPIT</div>
-                            <div class="color-btn" onclick="setCameraView('chase', 'CHASE', this)">CHASE</div>
-                            <div class="color-btn" onclick="setCameraView('external', 'EXTERNAL', this)">EXTERNAL</div>
-                            <div class="color-btn" onclick="setCameraView('topdown', 'TOP-DOWN', this)">TOP-DOWN</div>
-                            <div class="color-btn" onclick="setCameraView('firstperson', '1ST PERSON', this)">1ST PERSON</div>
-                            <div class="color-btn" onclick="setCameraView('gunner', 'GUNNER', this)">GUNNER</div>
-                        </div>
-                    </div>
                 </div>
 
                 <button class="btn-main" onclick="engageFlight()">ENGAGE FLIGHT RUN</button>
-                <button class="btn-secondary" onclick="toggleWalkMode()">WALK IN HANGAR</button>
             </div>
+
         </div>
     </div>
 
-    <!-- Death Screen -->
+    <!-- 2. AIRFRAME COLLISION RECOVERY STATE OVERLAY -->
     <div id="death-screen" class="overlay-screen">
         <h1 style="font-size: 3.8em; margin: 0; color: #ff2222; text-shadow: 0 0 20px #000; letter-spacing: 1px;">CRITICAL AIRFRAME IMPACT</h1>
         <p style="font-size: 1.2em; color: #ffb3b3; margin: 5px 0 25px 0; text-transform: uppercase; letter-spacing: 2px;">Structural boundaries breached on obstacle matrix</p>
-        <p style="font-size: 1.5em; font-family: monospace;">
-            Press <span style="background: white; color: black; padding: 4px 14px; border-radius: 4px; font-weight: bold;">R</span> to Return to Hangar
-        </p>
-        <div id="crash-details" style="margin-top: 20px; font-size: 0.9em; color: #ffaaaa;"></div>
+        <p style="font-size: 1.5em; font-family: monospace;">Press <span style="background: white; color: black; padding: 4px 14px; border-radius: 4px; font-weight: bold;">R</span> to Return to Hangar</p>
     </div>
 
-    <!-- Pause Menu -->
-    <div id="pause-menu" class="overlay-screen">
-        <h2 style="margin-bottom: 20px; color: #17b978;">PAUSED</h2>
-        <button class="btn-main" onclick="resumeGame()" style="margin-bottom: 10px;">RESUME FLIGHT</button>
-        <button class="btn-secondary" onclick="returnToHangar()">RETURN TO HANGAR</button>
-        <button class="btn-secondary" onclick="restartFlight()">RESTART FLIGHT</button>
-        <button class="btn-secondary" onclick="toggleSound()">TOGGLE SOUND: <span id="sound-status">ON</span></button>
-    </div>
-
-    <!-- HUD -->
+    <!-- 3. GLASS HUD AVIONICS SYSTEM COCKPIT CORES -->
     <div id="hud-container">
         <div id="crosshair">+</div>
         <div id="top-info">
@@ -705,745 +162,102 @@
             <div id="active-plane-title" style="font-size: 1.6em; font-weight: bold; text-transform: uppercase;">F-22 Raptor</div>
         </div>
         <div id="pov-indicator">POV CAMERA: <span id="pov-state" style="font-weight:bold;">AUTO-TRACK</span><br><span style="font-size:0.8em; color:#8b9bb4;">Click + Drag Mouse to Orbit</span></div>
-        <div id="camera-view-indicator">VIEW: <span id="camera-view-text">COCKPIT</span></div>
 
         <div id="mfd-dashboard">
             <div class="mfd-screen">
                 <div class="mfd-title">Primary Flight Display</div>
                 <div class="mfd-data">ALT: <span id="dash-alt">0</span><small> ft</small></div>
                 <div class="mfd-data">SPD: <span id="dash-spd">0</span><small> mph</small></div>
-                <div class="mfd-data">VS: <span id="dash-vs">0</span><small> ft/min</small></div>
-                <div class="mfd-data">AOA: <span id="dash-aoa">0</span><small>°</small></div>
             </div>
             <div class="mfd-screen">
                 <div class="mfd-title">Weapons & Gear Systems</div>
                 <div class="mfd-data">GEAR: <span id="dash-gear">DOWN</span></div>
-                <div class="mfd-data">FLAPS: <span id="dash-flaps">0%</span></div>
-                <div class="mfd-data">AIRBRAKES: <span id="dash-airbrakes">RETRACTED</span></div>
                 <div class="mfd-data">WEAPON: <span id="weapon-indicator">NONE</span></div>
             </div>
             <div class="mfd-screen">
                 <div class="mfd-title">System Mechanics</div>
                 <div class="mfd-data">INTEG: <span id="dash-hull" style="color:#00ff66;">100%</span></div>
-                <div class="mfd-data">FUEL: <span id="dash-fuel">100%</span></div>
-                <div class="mfd-data">ENG1: <span id="dash-engine1" style="color:#00ff66;">100%</span></div>
-                <div class="mfd-data">ENG2: <span id="dash-engine2" style="color:#00ff66;">100%</span></div>
                 <div class="mfd-data">CLOCK: <span id="dash-time">12:00</span></div>
             </div>
         </div>
-
-        <div id="compass">
-            <canvas id="compass-canvas"></canvas>
-        </div>
-
-        <div id="navigation-map">
-            <canvas id="nav-map-canvas"></canvas>
-        </div>
-
-        <div id="faults-display">
-            <div style="font-weight: bold; color: #ff0000; margin-bottom: 5px;">SYSTEM FAULTS</div>
-            <div id="faults-list"></div>
-        </div>
     </div>
-
-    <!-- World Elements -->
-    <div id="world-elements"></div>
-
-    <!-- Walk Mode UI -->
-    <div id="walk-mode-ui">
-        <div>WALK MODE - Press <strong>E</strong> to interact with planes</div>
-        <div style="margin-top: 5px; font-size: 0.8em;">
-            Use WASD to move, Mouse to look, Shift to run
-        </div>
-    </div>
-
-    <!-- Sound Controls -->
-    <div id="sound-controls">
-        <button class="sound-btn active" onclick="toggleSound()" id="sound-toggle-btn">
-            <i class="fas fa-volume-up"></i> SOUND
-        </button>
-        <div style="display: flex; align-items: center;">
-            <i class="fas fa-volume-down" style="color: #17b978;"></i>
-            <input type="range" id="volume-slider" min="0" max="100" value="70" style="width: 100px; margin: 0 10px;" oninput="setVolume(this.value)">
-            <i class="fas fa-volume-up" style="color: #17b978;"></i>
-        </div>
-    </div>
-
-    <!-- Tooltip -->
-    <div class="tooltip" id="tooltip"></div>
 
     <!-- Core Graphics Engines -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
 
     <script>
-        // --- GLOBAL CONFIGURATION ---
-        const DEBUG_MODE = false;
-        const MAX_NPC_PLANES = 8;
-        const MAX_TREES = 500;
-        const MAX_BUILDINGS = 200;
-        const MAX_AIRPORTS = 3;
-        const TERRAIN_SIZE = 20000;
-
-        // --- SOUND MANAGER ---
-        const soundManager = {
-            enabled: true,
-            volume: 0.7,
-            sounds: {},
-            init() {
-                this.sounds.engine = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3'], loop: true, volume: 0 });
-                this.sounds.wind = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-wind-blowing-920.mp3'], loop: true, volume: 0 });
-                this.sounds.gunfire = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-laser-gun-shoot-1874.mp3'], volume: 0.5 });
-                this.sounds.explosion = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-big-explosion-1691.mp3'], volume: 0.8 });
-                this.sounds.gear = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3'], volume: 0.6 });
-                this.sounds.stall = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3'], loop: true, volume: 0 });
-                this.sounds.warning = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-alarm-tone-996.mp3'], loop: true, volume: 0 });
-                this.sounds.flaps = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-metal-hit-1421.mp3'], volume: 0.4 });
-                this.sounds.airbrake = new Howl({ src: ['https://assets.mixkit.co/sfx/preview/mixkit-whoosh-air-1050.mp3'], volume: 0.5 });
-            },
-            setVolume(volume) {
-                this.volume = volume / 100;
-                Object.values(this.sounds).forEach(sound => {
-                    sound.volume(this.volume * (sound._volume || 1));
-                });
-            },
-            toggle() {
-                this.enabled = !this.enabled;
-                Object.values(this.sounds).forEach(sound => {
-                    sound.mute(!this.enabled);
-                });
-                document.getElementById('sound-status').textContent = this.enabled ? 'ON' : 'OFF';
-                document.getElementById('sound-toggle-btn').classList.toggle('active', this.enabled);
-            },
-            play(name) {
-                if (!this.enabled) return;
-                if (this.sounds[name]) {
-                    this.sounds[name].play();
-                }
-            },
-            stop(name) {
-                if (this.sounds[name]) {
-                    this.sounds[name].stop();
-                }
-            },
-            fadeIn(name, duration = 1000) {
-                if (!this.enabled) return;
-                if (this.sounds[name]) {
-                    this.sounds[name].fade(0, this.volume, duration);
-                    this.sounds[name].play();
-                }
-            },
-            fadeOut(name, duration = 1000) {
-                if (this.sounds[name]) {
-                    this.sounds[name].fade(this.sounds[name].volume(), 0, duration);
-                }
-            },
-            setEngineVolume(volume) {
-                if (this.sounds.engine) {
-                    this.sounds.engine.volume(volume * this.volume);
-                }
-            },
-            setWindVolume(volume) {
-                if (this.sounds.wind) {
-                    this.sounds.wind.volume(volume * this.volume);
-                }
-            }
-        };
-
-        // Initialize sound manager
-        soundManager.init();
-
-        // --- FLEET PROFILES WITH ENHANCED DETAILS ---
+        // --- 13 FLEET ARCHITECTURAL COMPREHENSIVE DEFINITIONS ---
         const fleetProfiles = {
-            f22: {
-                name: "F-22 Raptor",
-                isMilitary: true,
-                speed: 3.0,
-                pitchRate: 0.035,
-                rollRate: 0.055,
-                mass: 0.05,
-                type: "jet",
-                maxAltitude: 65000,
-                maxSpeed: 1500,
-                engineCount: 2,
-                wingSpan: 13.56,
-                length: 18.92,
-                height: 5.08,
-                fuelCapacity: 18000,
-                fuelBurnRate: 0.8,
-                stallSpeed: 120,
-                maxG: 9,
-                hasAfterburner: true,
-                hasRadar: true,
-                hasStealth: true,
-                description: "Twin-engine, all-weather stealth tactical fighter aircraft with supercruise, supermaneuverability, and sensor fusion.",
-                modelPath: "f22",
-                cockpitPosition: { x: 0, y: 0.8, z: -2.5 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 0.8, z: -2.5 },
-                    chase: { x: 0, y: 2, z: 8 },
-                    external: { x: 5, y: 3, z: 5 },
-                    topdown: { x: 0, y: 20, z: 0 },
-                    firstperson: { x: 0, y: 0.5, z: -1.5 },
-                    gunner: { x: 0.7, y: 0.3, z: -3 }
-                }
-            },
-            su57: {
-                name: "Su-57 Felon",
-                isMilitary: true,
-                speed: 3.1,
-                pitchRate: 0.037,
-                rollRate: 0.058,
-                mass: 0.05,
-                type: "jet",
-                maxAltitude: 66000,
-                maxSpeed: 1550,
-                engineCount: 2,
-                wingSpan: 13.99,
-                length: 19.8,
-                height: 4.74,
-                fuelCapacity: 18000,
-                fuelBurnRate: 0.85,
-                stallSpeed: 130,
-                maxG: 9,
-                hasAfterburner: true,
-                hasRadar: true,
-                hasStealth: true,
-                description: "Russian multirole, single-seat, twin-engine fifth-generation jet multirole fighter with stealth capability.",
-                modelPath: "su57",
-                cockpitPosition: { x: 0, y: 0.7, z: -2.8 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 0.7, z: -2.8 },
-                    chase: { x: 0, y: 2, z: 8 },
-                    external: { x: 5, y: 3, z: 5 },
-                    topdown: { x: 0, y: 20, z: 0 },
-                    firstperson: { x: 0, y: 0.4, z: -1.8 },
-                    gunner: { x: 0.8, y: 0.2, z: -3.2 }
-                }
-            },
-            f16: {
-                name: "F-16 Fighting Falcon",
-                isMilitary: true,
-                speed: 2.6,
-                pitchRate: 0.040,
-                rollRate: 0.065,
-                mass: 0.04,
-                type: "jet",
-                maxAltitude: 50000,
-                maxSpeed: 1500,
-                engineCount: 1,
-                wingSpan: 9.96,
-                length: 15.06,
-                height: 4.88,
-                fuelCapacity: 7000,
-                fuelBurnRate: 0.7,
-                stallSpeed: 110,
-                maxG: 9,
-                hasAfterburner: true,
-                hasRadar: true,
-                description: "Single-engine multirole fighter aircraft originally developed by General Dynamics for the United States Air Force.",
-                modelPath: "f16",
-                cockpitPosition: { x: 0, y: 0.6, z: -2.2 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 0.6, z: -2.2 },
-                    chase: { x: 0, y: 1.5, z: 6 },
-                    external: { x: 4, y: 2, z: 4 },
-                    topdown: { x: 0, y: 15, z: 0 },
-                    firstperson: { x: 0, y: 0.3, z: -1.2 },
-                    gunner: { x: 0.5, y: 0.1, z: -2.5 }
-                }
-            },
-            b747: {
-                name: "Boeing 747-8",
-                isMilitary: false,
-                speed: 1.4,
-                pitchRate: 0.010,
-                rollRate: 0.014,
-                mass: 0.45,
-                type: "heavy",
-                maxAltitude: 43000,
-                maxSpeed: 600,
-                engineCount: 4,
-                wingSpan: 68.45,
-                length: 76.3,
-                height: 19.35,
-                fuelCapacity: 240000,
-                fuelBurnRate: 2.5,
-                stallSpeed: 150,
-                maxG: 2.5,
-                hasAfterburner: false,
-                description: "Wide-body commercial jet airliner and cargo aircraft, often referred to by its original nickname, Jumbo Jet.",
-                modelPath: "b747",
-                cockpitPosition: { x: 0, y: 3.5, z: -10 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 3.5, z: -10 },
-                    chase: { x: 0, y: 5, z: 20 },
-                    external: { x: 15, y: 10, z: 15 },
-                    topdown: { x: 0, y: 50, z: 0 },
-                    firstperson: { x: 0, y: 2, z: -5 },
-                    gunner: { x: 0, y: 3, z: -15 }
-                }
-            },
-            a380: {
-                name: "Airbus A380",
-                isMilitary: false,
-                speed: 1.3,
-                pitchRate: 0.008,
-                rollRate: 0.011,
-                mass: 0.55,
-                type: "heavy",
-                maxAltitude: 43000,
-                maxSpeed: 580,
-                engineCount: 4,
-                wingSpan: 79.75,
-                length: 72.72,
-                height: 24.09,
-                fuelCapacity: 320000,
-                fuelBurnRate: 3.0,
-                stallSpeed: 140,
-                maxG: 2.5,
-                description: "European four-engine jet airliner manufactured by Airbus. It is the world's largest passenger airliner.",
-                modelPath: "a380",
-                cockpitPosition: { x: 0, y: 4, z: -12 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 4, z: -12 },
-                    chase: { x: 0, y: 6, z: 25 },
-                    external: { x: 20, y: 12, z: 20 },
-                    topdown: { x: 0, y: 60, z: 0 },
-                    firstperson: { x: 0, y: 2.5, z: -6 },
-                    gunner: { x: 0, y: 4, z: -20 }
-                }
-            },
-            c130: {
-                name: "C-130 Hercules",
-                isMilitary: true,
-                speed: 1.1,
-                pitchRate: 0.015,
-                rollRate: 0.020,
-                mass: 0.35,
-                type: "heavy",
-                maxAltitude: 30000,
-                maxSpeed: 400,
-                engineCount: 4,
-                wingSpan: 40.41,
-                length: 29.79,
-                height: 11.66,
-                fuelCapacity: 45000,
-                fuelBurnRate: 1.8,
-                stallSpeed: 100,
-                maxG: 2.5,
-                description: "Four-engine turboprop military transport aircraft designed and built originally by Lockheed.",
-                modelPath: "c130",
-                cockpitPosition: { x: 0, y: 2.5, z: -8 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 2.5, z: -8 },
-                    chase: { x: 0, y: 4, z: 15 },
-                    external: { x: 12, y: 6, z: 12 },
-                    topdown: { x: 0, y: 40, z: 0 },
-                    firstperson: { x: 0, y: 1.5, z: -4 },
-                    gunner: { x: 0, y: 2, z: -10 }
-                }
-            },
-            p51: {
-                name: "P-51 Mustang",
-                isMilitary: false,
-                speed: 1.25,
-                pitchRate: 0.028,
-                rollRate: 0.042,
-                mass: 0.12,
-                type: "prop",
-                maxAltitude: 42000,
-                maxSpeed: 440,
-                engineCount: 1,
-                wingSpan: 11.28,
-                length: 9.83,
-                height: 4.13,
-                fuelCapacity: 1100,
-                fuelBurnRate: 0.4,
-                stallSpeed: 80,
-                maxG: 7,
-                description: "American long-range, single-seat fighter and fighter-bomber used during World War II.",
-                modelPath: "p51",
-                cockpitPosition: { x: 0, y: 0.5, z: -1.8 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 0.5, z: -1.8 },
-                    chase: { x: 0, y: 1, z: 5 },
-                    external: { x: 3, y: 1.5, z: 3 },
-                    topdown: { x: 0, y: 10, z: 0 },
-                    firstperson: { x: 0, y: 0.2, z: -0.8 },
-                    gunner: { x: 0.3, y: 0.1, z: -2 }
-                }
-            },
-            spitfire: {
-                name: "Supermarine Spitfire",
-                isMilitary: false,
-                speed: 1.2,
-                pitchRate: 0.031,
-                rollRate: 0.046,
-                mass: 0.11,
-                type: "prop",
-                maxAltitude: 44000,
-                maxSpeed: 450,
-                engineCount: 1,
-                wingSpan: 11.23,
-                length: 9.14,
-                height: 3.86,
-                fuelCapacity: 850,
-                fuelBurnRate: 0.35,
-                stallSpeed: 75,
-                maxG: 8,
-                description: "British single-seat fighter aircraft that was used by the Royal Air Force and other Allied countries before, during, and after World War II.",
-                modelPath: "spitfire",
-                cockpitPosition: { x: 0, y: 0.4, z: -1.6 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 0.4, z: -1.6 },
-                    chase: { x: 0, y: 0.8, z: 4 },
-                    external: { x: 2.5, y: 1.2, z: 2.5 },
-                    topdown: { x: 0, y: 8, z: 0 },
-                    firstperson: { x: 0, y: 0.15, z: -0.7 },
-                    gunner: { x: 0.25, y: 0.05, z: -1.8 }
-                }
-            },
-            pitts: {
-                name: "Pitts Special S-2B",
-                isMilitary: false,
-                speed: 0.9,
-                pitchRate: 0.048,
-                rollRate: 0.070,
-                mass: 0.04,
-                type: "prop",
-                maxAltitude: 20000,
-                maxSpeed: 260,
-                engineCount: 1,
-                wingSpan: 6.1,
-                length: 5.41,
-                height: 1.98,
-                fuelCapacity: 300,
-                fuelBurnRate: 0.2,
-                stallSpeed: 60,
-                maxG: 9,
-                description: "Light single-engine biplane with a history of over 60 years. Designed by Curtis Pitts, it has won numerous world aerobatic championships.",
-                modelPath: "pitts",
-                cockpitPosition: { x: 0, y: 0.3, z: -0.8 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 0.3, z: -0.8 },
-                    chase: { x: 0, y: 0.5, z: 3 },
-                    external: { x: 1.5, y: 0.8, z: 1.5 },
-                    topdown: { x: 0, y: 5, z: 0 },
-                    firstperson: { x: 0, y: 0.1, z: -0.4 },
-                    gunner: { x: 0.1, y: 0, z: -1 }
-                }
-            },
-            cessna172: {
-                name: "Cessna 172 Skyhawk",
-                isMilitary: false,
-                speed: 0.8,
-                pitchRate: 0.018,
-                rollRate: 0.025,
-                mass: 0.08,
-                type: "prop",
-                maxAltitude: 15000,
-                maxSpeed: 190,
-                engineCount: 1,
-                wingSpan: 11.0,
-                length: 8.28,
-                height: 2.72,
-                fuelCapacity: 200,
-                fuelBurnRate: 0.15,
-                stallSpeed: 50,
-                maxG: 3.8,
-                description: "Single-engine, high wing, four-seat airplane made in the USA. First flown in 1955, more Cessna 172s have been built than any other aircraft.",
-                modelPath: "cessna172",
-                cockpitPosition: { x: 0, y: 0.6, z: -1.2 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 0.6, z: -1.2 },
-                    chase: { x: 0, y: 1, z: 4 },
-                    external: { x: 2, y: 1.5, z: 2 },
-                    topdown: { x: 0, y: 8, z: 0 },
-                    firstperson: { x: 0, y: 0.3, z: -0.6 },
-                    gunner: { x: 0, y: 0.5, z: -1.5 }
-                }
-            },
-            a10: {
-                name: "A-10 Thunderbolt II",
-                isMilitary: true,
-                speed: 1.3,
-                pitchRate: 0.024,
-                rollRate: 0.034,
-                mass: 0.22,
-                type: "jet",
-                maxAltitude: 45000,
-                maxSpeed: 450,
-                engineCount: 2,
-                wingSpan: 17.53,
-                length: 16.26,
-                height: 4.47,
-                fuelCapacity: 20000,
-                fuelBurnRate: 1.2,
-                stallSpeed: 120,
-                maxG: 7.33,
-                hasAfterburner: false,
-                description: "Twin-engine, straight wing jet aircraft developed by Fairchild-Republic for the United States Air Force.",
-                modelPath: "a10",
-                cockpitPosition: { x: 0, y: 1.2, z: -3 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 1.2, z: -3 },
-                    chase: { x: 0, y: 2, z: 8 },
-                    external: { x: 6, y: 3, z: 6 },
-                    topdown: { x: 0, y: 20, z: 0 },
-                    firstperson: { x: 0, y: 0.8, z: -1.8 },
-                    gunner: { x: 0, y: 0.5, z: -4.5 }
-                }
-            },
-            concorde: {
-                name: "Aérospatiale Concorde",
-                isMilitary: false,
-                speed: 3.4,
-                pitchRate: 0.011,
-                rollRate: 0.018,
-                mass: 0.38,
-                type: "jet",
-                maxAltitude: 60000,
-                maxSpeed: 1350,
-                engineCount: 4,
-                wingSpan: 25.6,
-                length: 61.66,
-                height: 12.19,
-                fuelCapacity: 119500,
-                fuelBurnRate: 4.0,
-                stallSpeed: 180,
-                maxG: 2.5,
-                description: "Turbojet-powered supersonic passenger airliner that was operated until 2003. It had a maximum speed over twice the speed of sound.",
-                modelPath: "concorde",
-                cockpitPosition: { x: 0, y: 2, z: -15 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 2, z: -15 },
-                    chase: { x: 0, y: 4, z: 25 },
-                    external: { x: 15, y: 6, z: 15 },
-                    topdown: { x: 0, y: 40, z: 0 },
-                    firstperson: { x: 0, y: 1, z: -8 },
-                    gunner: { x: 0, y: 1.5, z: -20 }
-                }
-            },
-            sr71: {
-                name: "SR-71 Blackbird",
-                isMilitary: true,
-                speed: 4.5,
-                pitchRate: 0.009,
-                rollRate: 0.015,
-                mass: 0.28,
-                type: "jet",
-                maxAltitude: 85000,
-                maxSpeed: 2200,
-                engineCount: 2,
-                wingSpan: 16.95,
-                length: 32.74,
-                height: 5.64,
-                fuelCapacity: 46000,
-                fuelBurnRate: 5.0,
-                stallSpeed: 200,
-                maxG: 3.5,
-                hasAfterburner: true,
-                description: "Long-range, Mach 3+ strategic reconnaissance aircraft that was operated by the United States Air Force.",
-                modelPath: "sr71",
-                cockpitPosition: { x: 0, y: 0.8, z: -8 },
-                cameraPositions: {
-                    cockpit: { x: 0, y: 0.8, z: -8 },
-                    chase: { x: 0, y: 3, z: 15 },
-                    external: { x: 10, y: 5, z: 10 },
-                    topdown: { x: 0, y: 50, z: 0 },
-                    firstperson: { x: 0, y: 0.4, z: -4 },
-                    gunner: { x: 0, y: 0.3, z: -12 }
-                }
-            }
+            f22: { name: "F-22 Raptor", isMilitary: true, speed: 3.0, pitchRate: 0.035, rollRate: 0.055, mass: 0.05, type: "jet" },
+            su57: { name: "Su-57 Felon", isMilitary: true, speed: 3.1, pitchRate: 0.037, rollRate: 0.058, mass: 0.05, type: "jet" },
+            f16: { name: "F-16 Fighting Falcon", isMilitary: true, speed: 2.6, pitchRate: 0.040, rollRate: 0.065, mass: 0.04, type: "jet" },
+            b747: { name: "Boeing 747-8", isMilitary: false, speed: 1.4, pitchRate: 0.010, rollRate: 0.014, mass: 0.45, type: "heavy" },
+            a380: { name: "Airbus A380", isMilitary: false, speed: 1.3, pitchRate: 0.008, rollRate: 0.011, mass: 0.55, type: "heavy" },
+            c130: { name: "C-130 Hercules", isMilitary: true, speed: 1.1, pitchRate: 0.015, rollRate: 0.020, mass: 0.35, type: "heavy" },
+            p51: { name: "P-51 Mustang", isMilitary: false, speed: 1.25, pitchRate: 0.028, rollRate: 0.042, mass: 0.12, type: "prop" },
+            spitfire: { name: "Supermarine Spitfire", isMilitary: false, speed: 1.2, pitchRate: 0.031, rollRate: 0.046, mass: 0.11, type: "prop" },
+            pitts: { name: "Pitts Special S-2B", isMilitary: false, speed: 0.9, pitchRate: 0.048, rollRate: 0.070, mass: 0.04, type: "prop" },
+            cessna172: { name: "Cessna 172 Skyhawk", isMilitary: false, speed: 0.8, pitchRate: 0.018, rollRate: 0.025, mass: 0.08, type: "prop" },
+            a10: { name: "A-10 Thunderbolt II", isMilitary: true, speed: 1.3, pitchRate: 0.024, rollRate: 0.034, mass: 0.22, type: "jet" },
+            concorde: { name: "Aérospatiale Concorde", isMilitary: false, speed: 3.4, pitchRate: 0.011, rollRate: 0.018, mass: 0.38, type: "jet" },
+            sr71: { name: "SR-71 Blackbird", isMilitary: true, speed: 4.5, pitchRate: 0.009, rollRate: 0.015, mass: 0.28, type: "jet" }
         };
 
         // --- GLOBAL SYSTEM AND CUSTOM DECK TRACKING CONTROLS ---
         let selectedType = 'f22';
         let activeProfile = fleetProfiles[selectedType];
         let flightActive = false;
-        let walkModeActive = false;
-        let paused = false;
 
         let customSkin = 'grey';
         let customWingspanScale = 1.0;
         let customLaserColor = 'red';
-        let currentCameraView = 'cockpit';
-        let flapsDeployment = 0;
-        let airbrakesDeployment = 0;
 
         const skinHexMap = {
-            grey: 0x5a697c,
-            desert: 0xc2b280,
-            forest: 0x2d4a22,
-            crimson: 0x990011,
-            blue: 0x1d4ed8,
-            white: 0xf8fafc,
-            gold: 0xffd700,
-            black: 0x000000
+            grey: 0x5a697c, desert: 0xc2b280, forest: 0x2d4a22,
+            crimson: 0x990011, blue: 0x1d4ed8, white: 0xf8fafc
         };
+        const laserHexMap = { red: 0xff0033, green: 0x00ff66, cyan: 0x00f0ff, magenta: 0xff00ff };
 
-        const laserHexMap = {
-            red: 0xff0033,
-            green: 0x00ff66,
-            cyan: 0x00f0ff,
-            magenta: 0xff00ff
-        };
-
-        let speed = 0.5;
-        let targetSpeed = 0.5;
-        let isGearDeployed = true;
-        let integrity = 100;
-        let fuel = 100;
-        let engine1Health = 100;
-        let engine2Health = 100;
+        let speed = 0.5; let targetSpeed = 0.5;
+        let isGearDeployed = true; let integrity = 100;
         let clockTime = 0.35;
-        let verticalSpeed = 0;
-        let angleOfAttack = 0;
-        let isStalled = false;
-        let stallWarning = false;
-        let currentHeading = 0;
-        let currentAltitude = 0;
-
         const inputState = {};
-        let mouseX = 0;
-        let mouseY = 0;
-        let targetMouseX = 0;
-        let targetMouseY = 0;
-
-        // --- CAMERA SYSTEM ---
-        let camera;
-        let cockpitCamera;
-        let chaseCamera;
-        let externalCamera;
-        let topdownCamera;
-        let firstPersonCamera;
-        let gunnerCamera;
-        let activeCamera;
 
         // --- INTERACTIVE MOUSE INTERCEPT CALCULATIONS FRAMEWORKS ---
         let isMouseDragging = false;
-        let cameraOrbitTheta = 0;
-        let cameraOrbitPhi = 0.2;
+        let cameraOrbitTheta = 0;   // Horizontal rotational angles
+        let cameraOrbitPhi = 0.2;    // Vertical look up/down angles
         let lastMouseCoordinateX = 0;
         let lastMouseCoordinateY = 0;
-
-        // --- WALK MODE VARIABLES ---
-        let walkPosition = { x: 0, y: 2, z: 0 };
-        let walkRotation = { x: 0, y: 0 };
-        let walkSpeed = 0.1;
-        let isRunning = false;
-
-        // --- AIRPORTS ---
-        const airports = [];
-        let currentAirport = null;
-        let nearestAirport = null;
-
-        // --- NPC PLANES ---
-        const npcPlanes = [];
-        let npcPlaneModels = [];
-
-        // --- FAULTS SYSTEM ---
-        let activeFaults = [];
-        const possibleFaults = [
-            { name: "Engine 1 Failure", probability: 0.0001, effect: () => { engine1Health = 0; }, message: "ENGINE 1 FAILURE - SHUTDOWN" },
-            { name: "Engine 2 Failure", probability: 0.0001, effect: () => { engine2Health = 0; }, message: "ENGINE 2 FAILURE - SHUTDOWN" },
-            { name: "Hydraulic Failure", probability: 0.00005, effect: () => { flapsDeployment = 0; airbrakesDeployment = 0; }, message: "HYDRAULIC SYSTEM FAILURE" },
-            { name: "Electrical Failure", probability: 0.00003, effect: () => { document.getElementById('hud-container').style.opacity = '0.3'; }, message: "ELECTRICAL SYSTEM FAILURE" },
-            { name: "Fuel Leak", probability: 0.00002, effect: () => { fuel -= 0.5; }, message: "FUEL LEAK DETECTED" },
-            { name: "Wing Damage", probability: 0.00001, effect: () => { customWingspanScale = Math.max(0.6, customWingspanScale - 0.1); }, message: "LEFT WING DAMAGE - REDUCED PERFORMANCE" },
-            { name: "Pitot Tube Icing", probability: 0.00002, effect: () => { speed = 0; }, message: "PITOT TUBE ICING - AIRSPEED INDICATOR FAILURE" }
-        ];
 
         // --- GRAPHICS ENVIRONMENT SETUP ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x7ec0ee);
         scene.fog = new THREE.FogExp2(0x7ec0ee, 0.0005);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
 
-        // Create multiple cameras
-        cockpitCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
-        chaseCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
-        externalCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
-        topdownCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
-        firstPersonCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
-        gunnerCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
-
-        camera = cockpitCamera;
-        activeCamera = cockpitCamera;
-
-        // Lighting
         const sunLight = new THREE.DirectionalLight(0xffffff, 1.4);
         sunLight.position.set(200, 500, 200);
-        sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 2048;
-        sunLight.shadow.mapSize.height = 2048;
-        sunLight.shadow.camera.near = 0.5;
-        sunLight.shadow.camera.far = 5000;
-        sunLight.shadow.camera.left = -2000;
-        sunLight.shadow.camera.right = 2000;
-        sunLight.shadow.camera.top = 2000;
-        sunLight.shadow.camera.bottom = -2000;
-        scene.add(sunLight);
+        scene.add(sunLight, new THREE.AmbientLight(0xffffff, 0.55));
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
-        scene.add(ambientLight);
-
-        // Skybox
-        const skyboxGeometry = new THREE.SphereGeometry(10000, 60, 40);
-        const skyboxMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                topColor: { value: new THREE.Color(0x0077ff) },
-                bottomColor: { value: new THREE.Color(0xffffff) },
-                offset: { value: 20 },
-                exponent: { value: 0.6 }
-            },
-            vertexShader: `
-                varying vec3 vWorldPosition;
-                void main() {
-                    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-                    vWorldPosition = worldPosition.xyz;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform vec3 topColor;
-                uniform vec3 bottomColor;
-                uniform float offset;
-                uniform float exponent;
-                varying vec3 vWorldPosition;
-                void main() {
-                    float h = normalize(vWorldPosition + offset).y;
-                    gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
-                }
-            `,
-            side: THREE.BackSide
-        });
-        const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
-        scene.add(skybox);
-
-        // Terrain
         const terrainObstacles = [];
-        const terrainGroup = new THREE.Group();
-        scene.add(terrainGroup);
+        const laserProjectiles = [];
 
         // --- PROCEDURAL ELEVATION FIELD CALCULATOR ---
         function lookupHeight(x, z) {
             let baseH = Math.cos(x * 0.001) * Math.sin(z * 0.001) * 350;
             let rippleH = Math.sin(x * 0.0035) * Math.cos(z * 0.0035) * 65;
-            let mountainH = Math.sin(x * 0.0005) * Math.cos(z * 0.0005) * 200;
-            let groundFloor = baseH + rippleH + mountainH;
+            let groundFloor = baseH + rippleH;
             return groundFloor < -10 ? -10 : groundFloor;
         }
 
-        const mapDimension = TERRAIN_SIZE;
-        const terrainGeo = new THREE.PlaneGeometry(mapDimension, mapDimension, 200, 200);
+        const mapDimension = 14000;
+        const terrainGeo = new THREE.PlaneGeometry(mapDimension, mapDimension, 70, 70);
         const vPositions = terrainGeo.attributes.position;
         for (let i = 0; i < vPositions.count; i++) {
             let px = vPositions.getX(i);
@@ -1451,2081 +265,349 @@
             vPositions.setZ(i, lookupHeight(px, py));
         }
         terrainGeo.computeVertexNormals();
-
-        const terrainTexture = new THREE.TextureLoader().load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
-        terrainTexture.wrapS = THREE.RepeatWrapping;
-        terrainTexture.wrapT = THREE.RepeatWrapping;
-        terrainTexture.repeat.set(40, 40);
-
-        const terrainMaterial = new THREE.MeshStandardMaterial({
-            map: terrainTexture,
-            roughness: 0.95,
-            metalness: 0.1,
-            color: 0x345427
-        });
-
-        const terrainMesh = new THREE.Mesh(terrainGeo, terrainMaterial);
+        const terrainMesh = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({ color: 0x345427, roughness: 0.95, flatShading: true }));
         terrainMesh.rotation.x = -Math.PI / 2;
-        terrainMesh.receiveShadow = true;
-        terrainGroup.add(terrainMesh);
+        scene.add(terrainMesh);
 
         // --- OBSTACLE HAZARD SPATIAL ALLOCATOR ---
-        function createTree(x, z) {
+        for (let i = 0; i < 400; i++) {
+            let tx = Math.random() * 8000 - 4000;
+            let tz = Math.random() * 8000 - 4000;
+            let ty = lookupHeight(tx, tz);
+
             const treeGroup = new THREE.Group();
+            
+            const tBox = new THREE.Mesh(new THREE.BoxGeometry(3, 20, 3), new THREE.MeshStandardMaterial({ color: 0x473121 }));
+            tBox.position.y = 10;
+            treeGroup.add(tBox);
+            terrainObstacles.push({ minX: tx-1.5, maxX: tx+1.5, minY: ty, maxY: ty+20, minZ: tz-1.5, maxZ: tz+1.5 });
 
-            const trunkHeight = 10 + Math.random() * 10;
-            const trunkGeometry = new THREE.CylinderGeometry(0.5 + Math.random() * 0.5, 0.3 + Math.random() * 0.3, trunkHeight, 8);
-            const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x473121, roughness: 0.8 });
-            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-            trunk.position.y = trunkHeight / 2;
-            trunk.castShadow = true;
-            trunk.receiveShadow = true;
-            treeGroup.add(trunk);
+            const fBox = new THREE.Mesh(new THREE.BoxGeometry(14, 25, 14), new THREE.MeshStandardMaterial({ color: 0x1b3d22, flatShading: true }));
+            fBox.position.y = 25;
+            treeGroup.add(fBox);
+            terrainObstacles.push({ minX: tx-7, maxX: tx+7, minY: ty+12, maxY: ty+37, minZ: tz-7, maxZ: tz+7 });
 
-            const foliageGeometry = new THREE.ConeGeometry(2 + Math.random() * 3, 8 + Math.random() * 5, 16);
-            const foliageMaterial = new THREE.MeshStandardMaterial({ color: 0x2d5a22, roughness: 0.9 });
-            const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
-            foliage.position.y = trunkHeight + 2;
-            foliage.rotation.y = Math.random() * Math.PI * 2;
-            foliage.castShadow = true;
-            treeGroup.add(foliage);
-
-            const ty = lookupHeight(x, z);
-            treeGroup.position.set(x, ty, z);
-
-            terrainObstacles.push({
-                minX: x - 3,
-                maxX: x + 3,
-                minY: ty,
-                maxY: ty + trunkHeight + 10,
-                minZ: z - 3,
-                maxZ: z + 3,
-                type: 'tree',
-                mesh: treeGroup
-            });
-
-            return treeGroup;
-        }
-
-        function createBuilding(x, z, width, height, depth) {
-            const buildingGroup = new THREE.Group();
-
-            const baseGeometry = new THREE.BoxGeometry(width, height, depth);
-            const baseMaterial = new THREE.MeshStandardMaterial({
-                color: 0x333333 + Math.random() * 0x333333,
-                roughness: 0.7,
-                metalness: 0.1
-            });
-            const base = new THREE.Mesh(baseGeometry, baseMaterial);
-            base.position.y = height / 2;
-            base.castShadow = true;
-            base.receiveShadow = true;
-            buildingGroup.add(base);
-
-            // Windows
-            for (let i = 0; i < 5; i++) {
-                for (let j = 0; j < 5; j++) {
-                    if (Math.random() > 0.3) {
-                        const windowGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.1);
-                        const windowMaterial = new THREE.MeshStandardMaterial({
-                            color: 0x88ccee,
-                            transparent: true,
-                            opacity: 0.7
-                        });
-                        const window = new THREE.Mesh(windowGeometry, windowMaterial);
-                        window.position.set(
-                            (i - 2) * 1.5,
-                            (j - 2) * 1.5 + 1,
-                            depth / 2 + 0.05
-                        );
-                        buildingGroup.add(window);
-                    }
-                }
-            }
-
-            // Roof
-            const roofGeometry = new THREE.BoxGeometry(width + 1, 0.5, depth + 1);
-            const roofMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.8 });
-            const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-            roof.position.y = height + 0.25;
-            buildingGroup.add(roof);
-
-            const ty = lookupHeight(x, z);
-            buildingGroup.position.set(x, ty, z);
-
-            terrainObstacles.push({
-                minX: x - width / 2,
-                maxX: x + width / 2,
-                minY: ty,
-                maxY: ty + height + 0.5,
-                minZ: z - depth / 2,
-                maxZ: z + depth / 2,
-                type: 'building',
-                mesh: buildingGroup
-            });
-
-            return buildingGroup;
-        }
-
-        function createAirport(x, z, size = 2000) {
-            const airportGroup = new THREE.Group();
-
-            // Runway
-            const runwayGeometry = new THREE.BoxGeometry(size, 0.1, 200);
-            const runwayMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.9 });
-            const runway = new THREE.Mesh(runwayGeometry, runwayMaterial);
-            runway.position.y = 0.05;
-            airportGroup.add(runway);
-
-            // Runway markings
-            for (let i = -size/2 + 50; i < size/2; i += 50) {
-                const markingGeometry = new THREE.BoxGeometry(10, 0.05, 2);
-                const markingMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-                const marking = new THREE.Mesh(markingGeometry, markingMaterial);
-                marking.position.set(i, 0.1, 0);
-                airportGroup.add(marking);
-            }
-
-            // Terminal
-            const terminalGeometry = new THREE.BoxGeometry(300, 20, 100);
-            const terminalMaterial = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.7 });
-            const terminal = new THREE.Mesh(terminalGeometry, terminalMaterial);
-            terminal.position.set(size/2 + 50, 10, 150);
-            airportGroup.add(terminal);
-
-            // Control tower
-            const towerGeometry = new THREE.CylinderGeometry(10, 8, 40, 8);
-            const towerMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.6 });
-            const tower = new THREE.Mesh(towerGeometry, towerMaterial);
-            tower.position.set(-size/4, 20, -100);
-            airportGroup.add(tower);
-
-            // Lights
-            for (let i = 0; i < 20; i++) {
-                const lightPole = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.2, 0.2, 5, 8),
-                    new THREE.MeshStandardMaterial({ color: 0x333333 })
-                );
-                lightPole.position.set(
-                    (Math.random() - 0.5) * size,
-                    2.5,
-                    (Math.random() - 0.5) * 200 - 100
-                );
-                airportGroup.add(lightPole);
-
-                const light = new THREE.PointLight(0xffaa00, 0.5, 50);
-                light.position.copy(lightPole.position);
-                light.position.y += 2.5;
-                airportGroup.add(light);
-            }
-
-            const ty = lookupHeight(x, z);
-            airportGroup.position.set(x, ty, z);
-
-            const airport = {
-                position: { x, z },
-                size,
-                mesh: airportGroup,
-                runways: [
-                    {
-                        start: { x: x - size/2, z: z },
-                        end: { x: x + size/2, z: z },
-                        width: 200
-                    }
-                ],
-                parkingSpots: []
-            };
-
-            // Create parking spots
-            for (let i = 0; i < 10; i++) {
-                airport.parkingSpots.push({
-                    position: {
-                        x: x + (Math.random() - 0.5) * size * 0.8,
-                        z: z + (Math.random() - 0.5) * 200
-                    },
-                    occupied: false,
-                    aircraft: null
-                });
-            }
-
-            airports.push(airport);
-            terrainGroup.add(airportGroup);
-
-            return airport;
-        }
-
-        // Create terrain features
-        function generateTerrain() {
-            // Create trees
-            for (let i = 0; i < MAX_TREES; i++) {
-                let tx = Math.random() * TERRAIN_SIZE - TERRAIN_SIZE/2;
-                let tz = Math.random() * TERRAIN_SIZE - TERRAIN_SIZE/2;
-                const tree = createTree(tx, tz);
-                terrainGroup.add(tree);
-            }
-
-            // Create buildings (cities)
-            for (let i = 0; i < MAX_BUILDINGS; i++) {
-                let bx = Math.random() * TERRAIN_SIZE - TERRAIN_SIZE/2;
-                let bz = Math.random() * TERRAIN_SIZE - TERRAIN_SIZE/2;
-                const width = 10 + Math.random() * 30;
-                const height = 5 + Math.random() * 50;
-                const depth = 10 + Math.random() * 30;
-                const building = createBuilding(bx, bz, width, height, depth);
-                terrainGroup.add(building);
-            }
-
-            // Create airports
-            for (let i = 0; i < MAX_AIRPORTS; i++) {
-                let ax = (Math.random() - 0.5) * TERRAIN_SIZE * 0.8;
-                let az = (Math.random() - 0.5) * TERRAIN_SIZE * 0.8;
-                createAirport(ax, az, 2000 + Math.random() * 1000);
-            }
+            treeGroup.position.set(tx, ty, tz);
+            scene.add(treeGroup);
         }
 
         // --- AIRFRAME CONFIGURATOR BLUEPRINTS CONSTRUCTOR ---
         const aircraftGroup = new THREE.Group();
-        let leftGearGroup, rightGearGroup, noseGearGroup;
-        let leftExhaustGlow, rightExhaustGlow;
+        let leftGearGroup, rightGearGroup, rightExhaustGlow, leftExhaustGlow;
         let propEngineBlades = [];
-        let elevators = [];
-        let ailerons = [];
-        let rudder = [];
-        let flaps = [];
-        let airbrakes = [];
-        let canopies = [];
-
         scene.add(aircraftGroup);
 
         function manufactureAircraft() {
-            // Clear existing aircraft
-            while (aircraftGroup.children.length > 0) {
-                aircraftGroup.remove(aircraftGroup.children[0]);
-            }
+            while (aircraftGroup.children.length > 0) { aircraftGroup.remove(aircraftGroup.children[0]); }
             propEngineBlades = [];
-            elevators = [];
-            ailerons = [];
-            rudder = [];
-            flaps = [];
-            airbrakes = [];
-            canopies = [];
 
             const chosenSkinHex = skinHexMap[customSkin];
-            const metalSkin = new THREE.MeshStandardMaterial({
-                color: chosenSkinHex,
-                roughness: 0.38,
-                metalness: 0.45,
-                flatShading: false
-            });
-            const canopyMat = new THREE.MeshStandardMaterial({
-                color: 0x0a1520,
-                transparent: true,
-                opacity: 0.65,
-                roughness: 0.05,
-                metalness: 0.1
-            });
-            const steelMat = new THREE.MeshStandardMaterial({
-                color: 0x242424,
-                metalness: 0.8,
-                roughness: 0.3
-            });
-            const glassMat = new THREE.MeshStandardMaterial({
-                color: 0x88ccee,
-                transparent: true,
-                opacity: 0.3,
-                roughness: 0.05
-            });
+            const metalSkin = new THREE.MeshStandardMaterial({ color: chosenSkinHex, roughness: 0.38, metalness: 0.45 });
+            const canopyMat = new THREE.MeshStandardMaterial({ color: 0x0a1520, transparent: true, opacity: 0.65, roughness: 0.05 });
+            const steelMat = new THREE.MeshStandardMaterial({ color: 0x242424, metalness: 0.8, roughness: 0.3 });
 
             const mainBody = new THREE.Group();
 
-            // 1. Detailed Fuselage based on aircraft type
+            // 1. Separate Class Core Fuselage Elements
             if (activeProfile.type === "heavy") {
-                // Main fuselage
-                const bodyGeometry = new THREE.CylinderGeometry(1.5, 1.2, activeProfile.length * 0.3, 20, 1, true);
-                const bodyMesh = new THREE.Mesh(bodyGeometry, metalSkin);
-                bodyMesh.rotation.x = Math.PI / 2;
-                bodyMesh.position.z = -activeProfile.length * 0.15;
+                const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 9.0), metalSkin);
+                const nose = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 16), metalSkin);
+                nose.position.set(0, 0, -4.5); nose.scale.set(1, 1, 1.4);
+                bodyMesh.add(nose);
+                const cockpitGlass = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 0.8), canopyMat);
+                cockpitGlass.position.set(0, 0.6, -4.0); bodyMesh.add(cockpitGlass);
                 mainBody.add(bodyMesh);
-
-                // Nose
-                const noseGeometry = new THREE.ConeGeometry(1.2, 2.5, 20);
-                const nose = new THREE.Mesh(noseGeometry, metalSkin);
-                nose.rotation.x = Math.PI / 2;
-                nose.position.set(0, 0, -activeProfile.length * 0.3);
-                mainBody.add(nose);
-
-                // Cockpit
-                const cockpitGeometry = new THREE.BoxGeometry(1.8, 0.8, 1.5);
-                const cockpit = new THREE.Mesh(cockpitGeometry, canopyMat);
-                cockpit.position.set(0, 0.6, -activeProfile.length * 0.25);
-                mainBody.add(cockpit);
-
-                // Windows
-                for (let i = 0; i < 10; i++) {
-                    const window = new THREE.Mesh(
-                        new THREE.BoxGeometry(0.3, 0.3, 0.1),
-                        glassMat
-                    );
-                    window.position.set(
-                        (Math.random() - 0.5) * 1.5,
-                        0.5 + Math.random() * 0.5,
-                        -activeProfile.length * 0.2 + Math.random() * activeProfile.length * 0.1
-                    );
-                    mainBody.add(window);
-                }
-
-                // Tail
-                const tailGeometry = new THREE.BoxGeometry(0.1, 2.5, 1.2);
-                const tail = new THREE.Mesh(tailGeometry, metalSkin);
-                tail.position.set(0, 1.25, activeProfile.length * 0.1);
-                mainBody.add(tail);
-
-                // Horizontal stabilizer
-                const hStabGeometry = new THREE.BoxGeometry(3, 0.1, 1);
-                const hStab = new THREE.Mesh(hStabGeometry, metalSkin);
-                hStab.position.set(0, 0, activeProfile.length * 0.15);
-                mainBody.add(hStab);
-                elevators.push(hStab);
-
             } else if (activeProfile.type === "prop") {
-                // Main fuselage
-                const bodyGeometry = new THREE.CylinderGeometry(0.4, 0.3, activeProfile.length * 0.4, 12, 1, true);
-                const bodyMesh = new THREE.Mesh(bodyGeometry, metalSkin);
+                const bodyMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.3, 5.5, 8), metalSkin);
                 bodyMesh.rotation.x = Math.PI / 2;
+                const cockpitGlass = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), canopyMat);
+                cockpitGlass.position.set(0, 0.8, 0.3); cockpitGlass.scale.set(1, 1, 1.8);
+                bodyMesh.add(cockpitGlass);
                 mainBody.add(bodyMesh);
-
-                // Nose
-                const noseGeometry = new THREE.ConeGeometry(0.35, 1.2, 12);
-                const nose = new THREE.Mesh(noseGeometry, metalSkin);
-                nose.rotation.x = Math.PI / 2;
-                nose.position.z = -activeProfile.length * 0.2;
-                mainBody.add(nose);
-
-                // Cockpit
-                const cockpitGeometry = new THREE.SphereGeometry(0.4, 16, 16);
-                const cockpit = new THREE.Mesh(cockpitGeometry, canopyMat);
-                cockpit.position.set(0, 0.4, -activeProfile.length * 0.1);
-                cockpit.scale.set(1, 1, 1.5);
-                mainBody.add(cockpit);
-                canopies.push(cockpit);
-
-                // Tail
-                const tailGeometry = new THREE.BoxGeometry(0.08, 0.8, 0.8);
-                const tail = new THREE.Mesh(tailGeometry, metalSkin);
-                tail.position.set(0, 0.4, activeProfile.length * 0.15);
-                mainBody.add(tail);
-
-                // Propeller
-                const hubGeometry = new THREE.CylinderGeometry(0.15, 0.12, 0.3, 8);
-                const hub = new THREE.Mesh(hubGeometry, steelMat);
-                hub.rotation.x = Math.PI / 2;
-                hub.position.set(0, 0, -activeProfile.length * 0.25);
-                mainBody.add(hub);
-
-                const bladeGeometry = new THREE.BoxGeometry(1.2, 0.05, 0.03);
-                for (let i = 0; i < 3; i++) {
-                    const blade = new THREE.Mesh(bladeGeometry, steelMat);
-                    blade.position.set(0, 0, -activeProfile.length * 0.25);
-                    blade.rotation.z = (i / 3) * Math.PI * 2;
-                    hub.add(blade);
-                    propEngineBlades.push(blade);
-                }
-
-            } else { // Jet
-                // Main fuselage
-                const bodyGeometry = new THREE.CylinderGeometry(0.6, 0.5, activeProfile.length * 0.4, 16, 1, true);
-                const bodyMesh = new THREE.Mesh(bodyGeometry, metalSkin);
-                bodyMesh.rotation.x = Math.PI / 2;
-                bodyMesh.position.z = -activeProfile.length * 0.1;
+            } else {
+                const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.6, 5.8), metalSkin);
+                const noseCone = new THREE.Mesh(new THREE.ConeGeometry(0.65, 2.2, 4), metalSkin);
+                noseCone.rotateX(Math.PI/2); noseCone.position.set(0, -0.05, -3.9);
+                bodyMesh.add(noseCone);
+                const cockpitGlass = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 16), canopyMat);
+                cockpitGlass.position.set(0, 0.42, -1.3); cockpitGlass.scale.set(1, 0.9, 2.2);
+                bodyMesh.add(cockpitGlass);
                 mainBody.add(bodyMesh);
-
-                // Nose
-                const noseGeometry = new THREE.ConeGeometry(0.5, 1.8, 16);
-                const nose = new THREE.Mesh(noseGeometry, metalSkin);
-                nose.rotation.x = Math.PI / 2;
-                nose.position.set(0, -0.05, -activeProfile.length * 0.25);
-                mainBody.add(nose);
-
-                // Cockpit
-                const cockpitGeometry = new THREE.SphereGeometry(0.35, 16, 16);
-                const cockpit = new THREE.Mesh(cockpitGeometry, canopyMat);
-                cockpit.position.set(0, 0.35, -activeProfile.length * 0.15);
-                cockpit.scale.set(1, 0.9, 1.8);
-                mainBody.add(cockpit);
-                canopies.push(cockpit);
-
-                // Intake
-                const intakeGeometry = new THREE.CylinderGeometry(0.2, 0.15, 0.8, 12);
-                const intakeL = new THREE.Mesh(intakeGeometry, steelMat);
-                intakeL.rotation.x = Math.PI / 2;
-                intakeL.position.set(-0.25, -0.1, -activeProfile.length * 0.05);
-                mainBody.add(intakeL);
-
-                const intakeR = intakeL.clone();
-                intakeR.position.x = 0.25;
-                mainBody.add(intakeR);
-
-                // Exhaust
-                const exhaustGeometry = new THREE.CylinderGeometry(0.18, 0.22, 0.5, 12);
-                const exhaustL = new THREE.Mesh(exhaustGeometry, steelMat);
-                exhaustL.rotation.x = Math.PI / 2;
-                exhaustL.position.set(-0.22, -0.05, activeProfile.length * 0.15);
-                mainBody.add(exhaustL);
-
-                const exhaustR = exhaustL.clone();
-                exhaustR.position.x = 0.22;
-                mainBody.add(exhaustR);
-
-                // Exhaust glow
-                const glowGeometry = new THREE.ConeGeometry(0.15, 1.5, 8);
-                glowGeometry.rotateX(-Math.PI / 2);
-
-                leftExhaustGlow = new THREE.Mesh(
-                    glowGeometry,
-                    new THREE.MeshBasicMaterial({
-                        color: 0x3388ff,
-                        transparent: true,
-                        opacity: 0.75
-                    })
-                );
-                leftExhaustGlow.position.set(-0.22, -0.05, activeProfile.length * 0.15 + 0.5);
-                leftExhaustGlow.visible = false;
-                exhaustL.add(leftExhaustGlow);
-
-                rightExhaustGlow = leftExhaustGlow.clone();
-                rightExhaustGlow.position.x = 0.22;
-                exhaustR.add(rightExhaustGlow);
-
-                // Tail
-                const tailGeometry = new THREE.BoxGeometry(0.05, 1.2, 0.8);
-                const tail = new THREE.Mesh(tailGeometry, metalSkin);
-                tail.position.set(0, 0.6, activeProfile.length * 0.2);
-                mainBody.add(tail);
-
-                // Vertical stabilizer
-                const vStabGeometry = new THREE.BoxGeometry(0.05, 1.0, 0.6);
-                const vStab = new THREE.Mesh(vStabGeometry, metalSkin);
-                vStab.position.set(0, 0.5, activeProfile.length * 0.25);
-                mainBody.add(vStab);
-                rudder.push(vStab);
-
-                // Horizontal stabilizer
-                const hStabGeometry = new THREE.BoxGeometry(2.5, 0.05, 0.4);
-                const hStabL = new THREE.Mesh(hStabGeometry, metalSkin);
-                hStabL.position.set(-1.25, 0, activeProfile.length * 0.22);
-                mainBody.add(hStabL);
-                elevators.push(hStabL);
-
-                const hStabR = hStabL.clone();
-                hStabR.position.x = 1.25;
-                mainBody.add(hStabR);
-                elevators.push(hStabR);
             }
 
             // 2. Adaptive Sizing Component Wingspan Config
-            let baseWingWidth = activeProfile.wingSpan * 0.3;
+            let baseWingWidth = activeProfile.type === "heavy" ? 12.0 : (activeProfile.type === "prop" ? 6.5 : 7.8);
             let absoluteWingWidth = baseWingWidth * customWingspanScale;
 
             if (activeProfile.type === "heavy") {
-                // Main wings
-                const wingGeometry = new THREE.BoxGeometry(absoluteWingWidth / 2, 0.1, 1.8);
-                const wingL = new THREE.Mesh(wingGeometry, metalSkin);
-                wingL.position.set(-absoluteWingWidth / 4 - 0.5, -0.1, -0.2);
-                wingL.rotation.y = 0.25;
-                wingL.rotation.z = 0.05;
-                mainBody.add(wingL);
-
-                const wingR = wingL.clone();
-                wingR.position.x = absoluteWingWidth / 4 + 0.5;
-                wingR.rotation.y = -0.25;
-                wingR.rotation.z = -0.05;
-                mainBody.add(wingR);
-
-                // Winglets
-                const wingletGeometry = new THREE.BoxGeometry(0.3, 0.8, 0.1);
-                const wingletL = new THREE.Mesh(wingletGeometry, metalSkin);
-                wingletL.position.set(-absoluteWingWidth / 2 - 0.3, 0.4, -0.2);
-                wingletL.rotation.z = 0.3;
-                mainBody.add(wingletL);
-
-                const wingletR = wingletL.clone();
-                wingletR.position.x = absoluteWingWidth / 2 + 0.3;
-                wingletR.rotation.z = -0.3;
-                mainBody.add(wingletR);
-
-                // Flaps
-                const flapGeometry = new THREE.BoxGeometry(absoluteWingWidth * 0.3 / 2, 0.05, 0.3);
-                const flapL = new THREE.Mesh(flapGeometry, metalSkin);
-                flapL.position.set(-absoluteWingWidth * 0.15, -0.15, -0.2);
-                flapL.rotation.x = 0;
-                mainBody.add(flapL);
-                flaps.push(flapL);
-
-                const flapR = flapL.clone();
-                flapR.position.x = absoluteWingWidth * 0.15;
-                mainBody.add(flapR);
-                flaps.push(flapR);
-
-                // Airbrakes
-                const airbrakeGeometry = new THREE.BoxGeometry(0.2, 0.8, 0.05);
-                const airbrakeL = new THREE.Mesh(airbrakeGeometry, metalSkin);
-                airbrakeL.position.set(-absoluteWingWidth / 4, 0.4, -0.2);
-                airbrakeL.rotation.x = Math.PI / 2;
-                mainBody.add(airbrakeL);
-                airbrakes.push(airbrakeL);
-
-                const airbrakeR = airbrakeL.clone();
-                airbrakeR.position.x = absoluteWingWidth / 4;
-                mainBody.add(airbrakeR);
-                airbrakes.push(airbrakeR);
-
+                const wingL = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.12, 2.2), metalSkin);
+                wingL.position.set(-absoluteWingWidth/4 - 0.8, -0.1, -0.5); wingL.rotation.y = 0.25; wingL.rotation.z = 0.05;
+                const wingR = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.12, 2.2), metalSkin);
+                wingR.position.set(absoluteWingWidth/4 + 0.8, -0.1, -0.5); wingR.rotation.y = -0.25; wingR.rotation.z = -0.05;
+                mainBody.add(wingL, wingR);
             } else if (activeProfile.type === "prop") {
-                // Main wings
-                const wingGeometry = new THREE.BoxGeometry(absoluteWingWidth / 2, 0.06, 1.0);
-                const wingL = new THREE.Mesh(wingGeometry, metalSkin);
-                wingL.position.set(-absoluteWingWidth / 4 - 0.2, 0.1, -0.1);
-                mainBody.add(wingL);
-
-                const wingR = wingL.clone();
-                wingR.position.x = absoluteWingWidth / 4 + 0.2;
-                mainBody.add(wingR);
-
-                // Struts
-                const strutGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.8, 8);
-                const strutL = new THREE.Mesh(strutGeometry, steelMat);
-                strutL.rotation.x = Math.PI / 4;
-                strutL.position.set(-absoluteWingWidth / 4 - 0.2, 0.4, -0.1);
-                mainBody.add(strutL);
-
-                const strutR = strutL.clone();
-                strutR.position.x = absoluteWingWidth / 4 + 0.2;
-                strutR.rotation.x = -Math.PI / 4;
-                mainBody.add(strutR);
-
-                // Ailerons
-                const aileronGeometry = new THREE.BoxGeometry(absoluteWingWidth * 0.2 / 2, 0.04, 0.2);
-                const aileronL = new THREE.Mesh(aileronGeometry, metalSkin);
-                aileronL.position.set(-absoluteWingWidth / 2 + 0.2, 0.1, -0.1);
-                mainBody.add(aileronL);
-                ailerons.push(aileronL);
-
-                const aileronR = aileronL.clone();
-                aileronR.position.x = absoluteWingWidth / 2 - 0.2;
-                mainBody.add(aileronR);
-                ailerons.push(aileronR);
-
-                // Flaps
-                const flapGeometry = new THREE.BoxGeometry(absoluteWingWidth * 0.3 / 2, 0.04, 0.15);
-                const flapL = new THREE.Mesh(flapGeometry, metalSkin);
-                flapL.position.set(-absoluteWingWidth * 0.1, 0.05, -0.1);
-                mainBody.add(flapL);
-                flaps.push(flapL);
-
-                const flapR = flapL.clone();
-                flapR.position.x = absoluteWingWidth * 0.1;
-                mainBody.add(flapR);
-                flaps.push(flapR);
-
-            } else { // Jet
-                // Main wings
-                const wingGeometry = new THREE.BoxGeometry(absoluteWingWidth / 2, 0.04, 1.5);
-                const wingL = new THREE.Mesh(wingGeometry, metalSkin);
-                wingL.position.set(-absoluteWingWidth / 4 - 0.3, -0.05, 0.1);
-                wingL.rotation.y = 0.35;
-                mainBody.add(wingL);
-
-                const wingR = wingL.clone();
-                wingR.position.x = absoluteWingWidth / 4 + 0.3;
-                wingR.rotation.y = -0.35;
-                mainBody.add(wingR);
-
-                // Ailerons
-                const aileronGeometry = new THREE.BoxGeometry(absoluteWingWidth * 0.25 / 2, 0.03, 0.3);
-                const aileronL = new THREE.Mesh(aileronGeometry, metalSkin);
-                aileronL.position.set(-absoluteWingWidth / 2 + 0.3, -0.05, 0.1);
-                mainBody.add(aileronL);
-                ailerons.push(aileronL);
-
-                const aileronR = aileronL.clone();
-                aileronR.position.x = absoluteWingWidth / 2 - 0.3;
-                mainBody.add(aileronR);
-                ailerons.push(aileronR);
-
-                // Flaps
-                const flapGeometry = new THREE.BoxGeometry(absoluteWingWidth * 0.3 / 2, 0.03, 0.25);
-                const flapL = new THREE.Mesh(flapGeometry, metalSkin);
-                flapL.position.set(-absoluteWingWidth * 0.12, -0.1, 0.1);
-                mainBody.add(flapL);
-                flaps.push(flapL);
-
-                const flapR = flapL.clone();
-                flapR.position.x = absoluteWingWidth * 0.12;
-                mainBody.add(flapR);
-                flaps.push(flapR);
-
-                // Airbrakes
-                const airbrakeGeometry = new THREE.BoxGeometry(0.15, 0.6, 0.03);
-                const airbrakeL = new THREE.Mesh(airbrakeGeometry, metalSkin);
-                airbrakeL.position.set(-0.4, 0.3, 0.5);
-                airbrakeL.rotation.x = Math.PI / 2;
-                mainBody.add(airbrakeL);
-                airbrakes.push(airbrakeL);
-
-                const airbrakeR = airbrakeL.clone();
-                airbrakeR.position.x = 0.4;
-                mainBody.add(airbrakeR);
-                airbrakes.push(airbrakeR);
+                const wingL = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.08, 1.4), metalSkin);
+                wingL.position.set(-absoluteWingWidth/4 - 0.3, 0.1, -0.4);
+                const wingR = wingL.clone(); wingR.position.x = absoluteWingWidth/4 + 0.3;
+                mainBody.add(wingL, wingR);
+            } else {
+                const wingL = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.05, 2.0), metalSkin);
+                wingL.position.set(-absoluteWingWidth/4 - 0.5, -0.05, 0.3); wingL.rotation.y = 0.35;
+                const wingR = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.05, 2.0), metalSkin);
+                wingR.position.set(absoluteWingWidth/4 + 0.5, -0.05, 0.3); wingR.rotation.y = -0.35;
+                mainBody.add(wingL, wingR);
             }
 
-            // 3. Landing Gear
-            const strutGeometry = new THREE.CylinderGeometry(0.04, 0.04, 1.1, 8);
-            const wheelGeometry = new THREE.CylinderGeometry(0.26, 0.26, 0.14, 16);
-            wheelGeometry.rotateZ(Math.PI / 2);
+            // 3. Tail Configuration Assignments
+            if (activeProfile.type === "heavy" || activeProfile.type === "prop") {
+                const tailVert = new THREE.Mesh(new THREE.BoxGeometry(0.08, activeProfile.type==="heavy"?2.8:1.3, 1.4), metalSkin);
+                tailVert.position.set(0, activeProfile.type==="heavy"?2.2:0.9, activeProfile.type==="heavy"?4.0:2.4);
+                mainBody.add(tailVert);
+            } else {
+                const finL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.5, 1.1), metalSkin);
+                finL.position.set(-0.6, 0.9, 2.4); finL.rotation.z = 0.22;
+                const finR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.5, 1.1), metalSkin);
+                finR.position.set(0.6, 0.9, 2.4); finR.rotation.z = -0.22;
+                mainBody.add(finL, finR);
+            }
+
+            // 4. Heavy Engine Pod Installations
+            if (activeProfile.type === "heavy") {
+                let spacing = absoluteWingWidth * 0.22;
+                let podPositions = [-spacing*1.8, -spacing*0.9, spacing*0.9, spacing*1.8];
+                podPositions.forEach(posX => {
+                    const enginePod = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.35, 1.6, 10), steelMat);
+                    enginePod.rotation.x = Math.PI / 2; enginePod.position.set(posX, -0.6, -0.2);
+                    mainBody.add(enginePod);
+                });
+            } else if (activeProfile.type === "prop") {
+                const hub = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.6, 8), steelMat);
+                hub.rotateX(-Math.PI/2); hub.position.set(0, 0, -2.9);
+                const blade = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.14, 0.04), steelMat);
+                hub.add(blade); mainBody.add(hub); propEngineBlades.push(blade);
+            } else {
+                const portL = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.5, 12), steelMat);
+                portL.rotation.x = Math.PI/2; portL.position.set(-0.32, -0.05, 2.9);
+                const portR = portL.clone(); portR.position.x = 0.32;
+                const torchG = new THREE.ConeGeometry(0.16, 2.2, 8); torchG.rotateX(-Math.PI/2);
+                leftExhaustGlow = new THREE.Mesh(torchG, new THREE.MeshBasicMaterial({ color: 0x3388ff, transparent: true, opacity: 0.75 }));
+                leftExhaustGlow.position.z = 1.2; rightExhaustGlow = leftExhaustGlow.clone();
+                portL.add(leftExhaustGlow); portR.add(rightExhaustGlow); mainBody.add(portL, portR);
+                leftExhaustGlow.visible = false; rightExhaustGlow.visible = false;
+            }
+
+            // 5. Tactical Weapon Rig Additions
+            if (activeProfile.isMilitary) {
+                const barrelL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4), steelMat);
+                barrelL.rotation.x = Math.PI/2; barrelL.position.set(-0.7, -0.15, -1.5);
+                const barrelR = barrelL.clone(); barrelR.position.x = 0.7;
+                mainBody.add(barrelL, barrelR);
+
+                const rocketL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+                rocketL.rotation.x = Math.PI/2; rocketL.position.set(-absoluteWingWidth/2, -0.2, 0);
+                const rocketR = rocketL.clone(); rocketR.position.x = absoluteWingWidth/2;
+                mainBody.add(rocketL, rocketR);
+            }
+
+            // 6. Support Struts Assembly Units
+            const strutG = new THREE.CylinderGeometry(0.04, 0.04, 1.1);
+            const wheelG = new THREE.CylinderGeometry(0.26, 0.26, 0.14); wheelG.rotateZ(Math.PI/2);
             const tireSkin = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.95 });
 
-            // Nose gear
-            noseGearGroup = new THREE.Group();
-            const noseStrut = new THREE.Mesh(strutGeometry, steelMat);
-            const noseWheel = new THREE.Mesh(wheelGeometry, tireSkin);
-            noseWheel.position.y = -0.55;
-            noseGearGroup.add(noseStrut, noseWheel);
-            noseGearGroup.position.set(0, -0.5, -activeProfile.length * 0.1);
-            mainBody.add(noseGearGroup);
-
-            // Left main gear
-            leftGearGroup = new THREE.Group();
-            const leftStrut = new THREE.Mesh(strutGeometry, steelMat);
-            const leftWheel = new THREE.Mesh(wheelGeometry, tireSkin);
-            leftWheel.position.y = -0.55;
-            leftGearGroup.add(leftStrut, leftWheel);
-            leftGearGroup.position.set(-0.8, -0.5, 0);
-            mainBody.add(leftGearGroup);
-
-            // Right main gear
-            rightGearGroup = new THREE.Group();
-            const rightStrut = new THREE.Mesh(strutGeometry, steelMat);
-            const rightWheel = new THREE.Mesh(wheelGeometry, tireSkin);
-            rightWheel.position.y = -0.55;
-            rightGearGroup.add(rightStrut, rightWheel);
-            rightGearGroup.position.set(0.8, -0.5, 0);
-            mainBody.add(rightGearGroup);
-
-            // 4. Tactical Weapon Rig Additions
-            if (activeProfile.isMilitary) {
-                // Guns
-                const barrelGeometry = new THREE.CylinderGeometry(0.04, 0.04, 1.4, 8);
-                const barrelL = new THREE.Mesh(barrelGeometry, steelMat);
-                barrelL.rotation.x = Math.PI / 2;
-                barrelL.position.set(-0.7, -0.15, -activeProfile.length * 0.1);
-                mainBody.add(barrelL);
-
-                const barrelR = barrelL.clone();
-                barrelR.position.x = 0.7;
-                mainBody.add(barrelR);
-
-                // Rockets
-                if (activeProfile.name !== "SR-71 Blackbird") {
-                    const rocketGeometry = new THREE.CylinderGeometry(0.06, 0.06, 1.6, 8);
-                    const rocketMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
-
-                    const rocketL = new THREE.Mesh(rocketGeometry, rocketMaterial);
-                    rocketL.rotation.x = Math.PI / 2;
-                    rocketL.position.set(-absoluteWingWidth / 2, -0.2, -0.1);
-                    mainBody.add(rocketL);
-
-                    const rocketR = rocketL.clone();
-                    rocketR.position.x = absoluteWingWidth / 2;
-                    mainBody.add(rocketR);
-                }
-            }
-
-            // 5. Antennas and other details
-            const antennaGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.5, 6);
-            const antenna = new THREE.Mesh(antennaGeometry, steelMat);
-            antenna.position.set(0, 0.8, -activeProfile.length * 0.05);
-            mainBody.add(antenna);
-
+            leftGearGroup = new THREE.Group(); const sL = new THREE.Mesh(strutG, steelMat); const tL = new THREE.Mesh(wheelG, tireSkin); tL.position.y = -0.55; leftGearGroup.add(sL, tL); leftGearGroup.position.set(-1.1, -0.5, 0);
+            rightGearGroup = new THREE.Group(); const sR = new THREE.Mesh(strutG, steelMat); const tR = new THREE.Mesh(wheelG, tireSkin); tR.position.y = -0.55; rightGearGroup.add(sR, tR); rightGearGroup.position.set(1.1, -0.5, 0);
+            
+            mainBody.add(leftGearGroup, rightGearGroup);
             aircraftGroup.add(mainBody);
-
-            // Set initial camera position
-            updateCameraPosition();
         }
 
         // --- HANGAR CONTROL INTERFACING CORE INJECTIONS ---
         const fleetGrid = document.getElementById('fleet-grid');
         Object.keys(fleetProfiles).forEach((k, idx) => {
             const plane = fleetProfiles[k];
-            const badge = plane.isMilitary ?
-                '<span class="card-class class-mil">MILITARY</span>' :
-                '<span class="card-class class-civ">CIVILIAN</span>';
-
-            // Create a simple 3D preview for each aircraft
-            const previewCanvas = document.createElement('canvas');
-            previewCanvas.width = 280;
-            previewCanvas.height = 120;
-            previewCanvas.style.width = '100%';
-            previewCanvas.style.height = '120px';
-            previewCanvas.style.borderRadius = '4px';
-            previewCanvas.style.background = '#040d1a';
-
-            // We'll render a simple preview later
-            previewCanvas.id = `preview-${k}`;
-
+            const badge = plane.isMilitary ? '<span class="card-class class-mil">MILITARY</span>' : '<span class="card-class class-civ">CIVILIAN</span>';
             fleetGrid.innerHTML += `
                 <div class="card-option ${idx === 0 ? 'active' : ''}" onclick="selectHangarPlane('${k}', this)">
-                    <div style="height: 120px; margin-bottom: 8px; background: #040d1a; border-radius: 4px; overflow: hidden;">
-                        <canvas id="preview-${k}" width="280" height="120"></canvas>
-                    </div>
                     <div class="card-title">${plane.name} ${badge}</div>
-                    <div class="card-desc">${plane.description}</div>
-                    <div class="card-stats">
-                        <span>Speed: ${plane.maxSpeed} mph</span>
-                        <span>Altitude: ${Math.floor(plane.maxAltitude/1000)}k ft</span>
-                        <span>Range: ${Math.floor(plane.fuelCapacity/plane.fuelBurnRate)} mi</span>
-                    </div>
+                    <div class="card-desc">Structural class: ${plane.type.toUpperCase()}. Base engine envelope tracking target up to ${Math.floor(plane.speed*220)} mph.</div>
                 </div>
             `;
         });
 
-        // Render previews after page loads
-        window.addEventListener('load', () => {
-            Object.keys(fleetProfiles).forEach(k => {
-                const canvas = document.getElementById(`preview-${k}`);
-                if (canvas) {
-                    renderAircraftPreview(canvas, k);
-                }
-            });
-        });
-
-        function renderAircraftPreview(canvas, aircraftKey) {
-            const profile = fleetProfiles[aircraftKey];
-            const ctx = canvas.getContext('2d');
-
-            // Simple 2D representation
-            ctx.fillStyle = '#040d1a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw aircraft silhouette
-            ctx.fillStyle = '#17b978';
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-
-            if (profile.type === 'heavy') {
-                // Draw a simple airplane
-                ctx.beginPath();
-                ctx.moveTo(50, 60);
-                ctx.lineTo(200, 60);
-                ctx.lineTo(220, 50);
-                ctx.lineTo(220, 70);
-                ctx.lineTo(200, 70);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Wings
-                ctx.beginPath();
-                ctx.moveTo(100, 60);
-                ctx.lineTo(80, 40);
-                ctx.lineTo(120, 40);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(100, 60);
-                ctx.lineTo(80, 80);
-                ctx.lineTo(120, 80);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Tail
-                ctx.beginPath();
-                ctx.moveTo(200, 60);
-                ctx.lineTo(210, 40);
-                ctx.lineTo(210, 80);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-            } else if (profile.type === 'prop') {
-                // Draw a propeller plane
-                ctx.beginPath();
-                ctx.moveTo(50, 60);
-                ctx.lineTo(150, 60);
-                ctx.lineTo(160, 55);
-                ctx.lineTo(160, 65);
-                ctx.lineTo(150, 65);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Wings
-                ctx.beginPath();
-                ctx.moveTo(100, 60);
-                ctx.lineTo(80, 50);
-                ctx.lineTo(120, 50);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(100, 60);
-                ctx.lineTo(80, 70);
-                ctx.lineTo(120, 70);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Propeller
-                ctx.beginPath();
-                ctx.arc(50, 60, 8, 0, Math.PI * 2);
-                ctx.moveTo(50, 60);
-                ctx.lineTo(58, 60);
-                ctx.moveTo(50, 60);
-                ctx.lineTo(42, 60);
-                ctx.moveTo(50, 60);
-                ctx.lineTo(50, 52);
-                ctx.moveTo(50, 60);
-                ctx.lineTo(50, 68);
-                ctx.stroke();
-            } else {
-                // Draw a jet
-                ctx.beginPath();
-                ctx.moveTo(50, 60);
-                ctx.lineTo(180, 60);
-                ctx.lineTo(200, 55);
-                ctx.lineTo(200, 65);
-                ctx.lineTo(180, 65);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Wings
-                ctx.beginPath();
-                ctx.moveTo(120, 60);
-                ctx.lineTo(100, 55);
-                ctx.lineTo(140, 55);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(120, 60);
-                ctx.lineTo(100, 65);
-                ctx.lineTo(140, 65);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                // Tail
-                ctx.beginPath();
-                ctx.moveTo(180, 60);
-                ctx.lineTo(190, 50);
-                ctx.lineTo(190, 70);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-            }
-
-            // Add aircraft name
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(profile.name, canvas.width / 2, 110);
-        }
-
         function selectHangarPlane(key, element) {
-            selectedType = key;
-            activeProfile = fleetProfiles[key];
-
+            selectedType = key; activeProfile = fleetProfiles[key];
             document.querySelectorAll('.card-option').forEach(item => item.classList.remove('active'));
             element.classList.add('active');
-
             document.getElementById('weapon-custom-box').style.display = activeProfile.isMilitary ? 'block' : 'none';
-
-            // Update stats display
-            document.getElementById('active-plane-title').innerText = activeProfile.name;
-            document.getElementById('weapon-indicator').innerText = activeProfile.isMilitary ? `AUTOCANNON (G)` : "NONE";
-            document.getElementById('weapon-indicator').style.color = activeProfile.isMilitary ? "#ff3333" : "#8b9bb4";
-
-            // If in walk mode, update the spawnable aircraft
-            if (walkModeActive) {
-                updateWalkModeAircraft();
-            }
         }
 
         function setSkin(id, desc, element) {
-            customSkin = id;
-            document.getElementById('lbl-skin').innerText = desc;
+            customSkin = id; document.getElementById('lbl-skin').innerText = desc;
             const buttons = element.parentNode.querySelectorAll('.color-btn');
-            buttons.forEach(b => b.classList.remove('active'));
-            element.classList.add('active');
-
-            if (flightActive) {
-                manufactureAircraft();
-            }
+            buttons.forEach(b => b.classList.remove('active')); element.classList.add('active');
         }
 
         function updateWingValue(val) {
             customWingspanScale = parseFloat(val);
             document.getElementById('lbl-wingspan').innerText = val + "x";
-
-            if (flightActive) {
-                manufactureAircraft();
-            }
-        }
-
-        function updateFlapsValue(val) {
-            flapsDeployment = parseInt(val);
-            document.getElementById('lbl-flaps').innerText = val + "%";
-            document.getElementById('dash-flaps').innerText = val + "%";
-
-            // Update flap animations
-            flaps.forEach((flap, index) => {
-                const targetRotation = (val / 100) * Math.PI * 0.3;
-                flap.rotation.x = targetRotation * (index % 2 === 0 ? 1 : -1);
-            });
-
-            // Sound effect
-            if (val > 0 && val < 100) {
-                soundManager.play('flaps');
-            }
-        }
-
-        function updateAirbrakesValue(val) {
-            airbrakesDeployment = parseInt(val);
-            const displayText = val === 0 ? "RETRACTED" : (val === 100 ? "FULLY DEPLOYED" : Math.floor(val) + "%");
-            document.getElementById('lbl-airbrakes').innerText = displayText;
-            document.getElementById('dash-airbrakes').innerText = displayText;
-
-            // Update airbrake animations
-            airbrakes.forEach(airbrake => {
-                const targetRotation = (val / 100) * Math.PI * 0.8;
-                airbrake.rotation.x = targetRotation;
-            });
-
-            // Sound effect
-            if (val > 0 && val < 100) {
-                soundManager.play('airbrake');
-            }
         }
 
         function setLaser(id, desc, element) {
-            customLaserColor = id;
-            document.getElementById('lbl-laser').innerText = desc;
+            customLaserColor = id; document.getElementById('lbl-laser').innerText = desc;
             const buttons = element.parentNode.querySelectorAll('.color-btn');
-            buttons.forEach(b => b.classList.remove('active'));
-            element.classList.add('active');
-        }
-
-        function setCameraView(view, desc, element) {
-            currentCameraView = view;
-            document.getElementById('lbl-camera-view').innerText = desc;
-            document.getElementById('camera-view-text').innerText = desc;
-
-            const buttons = element.parentNode.querySelectorAll('.color-btn');
-            buttons.forEach(b => b.classList.remove('active'));
-            element.classList.add('active');
-
-            updateCameraPosition();
-        }
-
-        function updateCameraPosition() {
-            if (!flightActive || !activeProfile) return;
-
-            const camPos = activeProfile.cameraPositions[currentCameraView];
-
-            if (currentCameraView === 'cockpit') {
-                activeCamera = cockpitCamera;
-                cockpitCamera.position.set(
-                    camPos.x,
-                    camPos.y,
-                    camPos.z
-                );
-                cockpitCamera.lookAt(
-                    camPos.x,
-                    camPos.y,
-                    camPos.z - 1
-                );
-            } else if (currentCameraView === 'chase') {
-                activeCamera = chaseCamera;
-                chaseCamera.position.set(
-                    aircraftGroup.position.x + camPos.x,
-                    aircraftGroup.position.y + camPos.y,
-                    aircraftGroup.position.z + camPos.z
-                );
-                chaseCamera.lookAt(aircraftGroup.position);
-            } else if (currentCameraView === 'external') {
-                activeCamera = externalCamera;
-                externalCamera.position.set(
-                    aircraftGroup.position.x + camPos.x,
-                    aircraftGroup.position.y + camPos.y,
-                    aircraftGroup.position.z + camPos.z
-                );
-                externalCamera.lookAt(aircraftGroup.position);
-            } else if (currentCameraView === 'topdown') {
-                activeCamera = topdownCamera;
-                topdownCamera.position.set(
-                    aircraftGroup.position.x + camPos.x,
-                    camPos.y,
-                    aircraftGroup.position.z + camPos.z
-                );
-                topdownCamera.lookAt(aircraftGroup.position);
-            } else if (currentCameraView === 'firstperson') {
-                activeCamera = firstPersonCamera;
-                firstPersonCamera.position.set(
-                    aircraftGroup.position.x + camPos.x,
-                    aircraftGroup.position.y + camPos.y,
-                    aircraftGroup.position.z + camPos.z
-                );
-                firstPersonCamera.rotation.copy(aircraftGroup.rotation);
-                firstPersonCamera.translateZ(-1);
-            } else if (currentCameraView === 'gunner') {
-                activeCamera = gunnerCamera;
-                gunnerCamera.position.set(
-                    aircraftGroup.position.x + camPos.x,
-                    aircraftGroup.position.y + camPos.y,
-                    aircraftGroup.position.z + camPos.z
-                );
-                gunnerCamera.lookAt(
-                    aircraftGroup.position.x + camPos.x * 2,
-                    aircraftGroup.position.y + camPos.y,
-                    aircraftGroup.position.z + camPos.z * 2
-                );
-            }
-
-            camera = activeCamera;
+            buttons.forEach(b => b.classList.remove('active')); element.classList.add('active');
         }
 
         function engageFlight() {
-            if (walkModeActive) {
-                toggleWalkMode();
-            }
-
             document.getElementById('entry-screen').style.opacity = '0';
-            soundManager.fadeIn('engine', 2000);
-            soundManager.fadeIn('wind', 2000);
-
             setTimeout(() => {
                 document.getElementById('entry-screen').style.display = 'none';
                 document.getElementById('hud-container').style.display = 'block';
-                document.getElementById('compass').style.display = 'block';
-                document.getElementById('navigation-map').style.display = 'block';
-                document.getElementById('sound-controls').style.display = 'block';
-
                 document.getElementById('active-plane-title').innerText = activeProfile.name;
                 document.getElementById('weapon-indicator').innerText = activeProfile.isMilitary ? `AUTOCANNON (G)` : "NONE";
                 document.getElementById('weapon-indicator').style.color = activeProfile.isMilitary ? "#ff3333" : "#8b9bb4";
 
-                integrity = 100;
-                fuel = 100;
-                engine1Health = 100;
-                engine2Health = 100;
-                speed = activeProfile.speed;
-                targetSpeed = activeProfile.speed;
-                isGearDeployed = true;
-                flapsDeployment = 0;
-                airbrakesDeployment = 0;
-                cameraOrbitTheta = 0;
-                cameraOrbitPhi = 0.2;
-                isMouseDragging = false;
-                isStalled = false;
-                stallWarning = false;
-                verticalSpeed = 0;
-                angleOfAttack = 0;
-
-                // Position at nearest airport
-                if (airports.length > 0) {
-                    const spawnAirport = airports[0]; // Use first airport for now
-                    aircraftGroup.position.set(
-                        spawnAirport.position.x,
-                        lookupHeight(spawnAirport.position.x, spawnAirport.position.z) + 5,
-                        spawnAirport.position.z
-                    );
-                    currentAirport = spawnAirport;
-                } else {
-                    aircraftGroup.position.set(0, 350, 0);
-                }
-
-                aircraftGroup.rotation.set(0, 0, 0);
-                aircraftGroup.rotation.order = 'YXZ';
-
+                integrity = 100; speed = activeProfile.speed;
+                cameraOrbitTheta = 0; cameraOrbitPhi = 0.2; isMouseDragging = false;
+                aircraftGroup.position.set(0, 350, 0); aircraftGroup.rotation.set(0,0,0);
+                
                 manufactureAircraft();
                 flightActive = true;
-                updateCameraPosition();
-
-                // Update HUD
-                updateHUD();
-
-                // Start compass and navigation map
-                initCompass();
-                initNavigationMap();
-
-                // Spawn some NPC planes
-                spawnNPCPlanes();
             }, 300);
         }
 
         function forceCrashState() {
-            flightActive = false;
-            isMouseDragging = false;
-            soundManager.fadeOut('engine', 1000);
-            soundManager.fadeOut('wind', 1000);
-            soundManager.play('explosion');
-
+            flightActive = false; isMouseDragging = false;
             document.getElementById('hud-container').style.display = 'none';
-            document.getElementById('compass').style.display = 'none';
-            document.getElementById('navigation-map').style.display = 'none';
-            document.getElementById('sound-controls').style.display = 'none';
             document.getElementById('death-screen').style.display = 'flex';
-
-            // Show crash details
-            const crashDetails = document.getElementById('crash-details');
-            crashDetails.innerHTML = `
-                <div>Altitude: ${Math.floor(currentAltitude * 3.3)} ft</div>
-                <div>Speed: ${Math.floor(speed * 220)} mph</div>
-                <div>Integrity: ${integrity}%</div>
-                <div>Cause: ${integrity <= 0 ? 'Structural Failure' : 'Ground Collision'}</div>
-            `;
         }
 
         function returnToHangar() {
-            // Clean up NPC planes
-            cleanupNPCPlanes();
-
             document.getElementById('death-screen').style.display = 'none';
-            document.getElementById('entry-screen').style.display = 'flex';
-            document.getElementById('entry-screen').style.opacity = '1';
-            soundManager.stop('engine');
-            soundManager.stop('wind');
-            soundManager.stop('stall');
-            soundManager.stop('warning');
-
-            // Reset faults
-            activeFaults = [];
-            updateFaultsDisplay();
-
-            // Reset aircraft position
-            aircraftGroup.position.set(0, 0, 0);
-            aircraftGroup.rotation.set(0, 0, 0);
-        }
-
-        function togglePause() {
-            paused = !paused;
-            document.getElementById('pause-menu').style.display = paused ? 'flex' : 'none';
-
-            if (paused) {
-                soundManager.fadeOut('engine', 500);
-                soundManager.fadeOut('wind', 500);
-            } else {
-                if (flightActive) {
-                    soundManager.fadeIn('engine', 500);
-                    soundManager.fadeIn('wind', 500);
-                }
-            }
-        }
-
-        function resumeGame() {
-            paused = false;
-            document.getElementById('pause-menu').style.display = 'none';
-
-            if (flightActive) {
-                soundManager.fadeIn('engine', 500);
-                soundManager.fadeIn('wind', 500);
-            }
-        }
-
-        function restartFlight() {
-            resumeGame();
-            forceCrashState();
-            setTimeout(() => {
-                engageFlight();
-            }, 1000);
-        }
-
-        // --- WALK MODE ---
-        let walkCamera;
-        let walkAircraftPreviews = [];
-
-        function initWalkMode() {
-            // Create walk camera
-            walkCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 9000);
-            walkCamera.position.set(0, 2, 5);
-
-            // Create ground for walk mode
-            const walkGroundGeometry = new THREE.PlaneGeometry(1000, 1000);
-            const walkGroundMaterial = new THREE.MeshStandardMaterial({
-                color: 0x222222,
-                roughness: 0.95
-            });
-            const walkGround = new THREE.Mesh(walkGroundGeometry, walkGroundMaterial);
-            walkGround.rotation.x = -Math.PI / 2;
-            walkGround.receiveShadow = true;
-            scene.add(walkGround);
-
-            // Create hangar building
-            const hangarGeometry = new THREE.BoxGeometry(200, 50, 100);
-            const hangarMaterial = new THREE.MeshStandardMaterial({
-                color: 0x333333,
-                roughness: 0.7
-            });
-            const hangar = new THREE.Mesh(hangarGeometry, hangarMaterial);
-            hangar.position.set(0, 25, -50);
-            scene.add(hangar);
-
-            // Add lights to hangar
-            for (let i = 0; i < 10; i++) {
-                const light = new THREE.PointLight(0xffaa66, 1, 50);
-                light.position.set(
-                    (Math.random() - 0.5) * 180,
-                    40,
-                    -50 + (Math.random() - 0.5) * 80
-                );
-                scene.add(light);
-            }
-
-            // Create aircraft previews in walk mode
-            updateWalkModeAircraft();
-        }
-
-        function updateWalkModeAircraft() {
-            // Clear existing previews
-            walkAircraftPreviews.forEach(preview => {
-                scene.remove(preview.group);
-            });
-            walkAircraftPreviews = [];
-
-            // Create previews for each aircraft type
-            let index = 0;
-            Object.keys(fleetProfiles).forEach(key => {
-                const profile = fleetProfiles[key];
-                const x = (index % 4) * 40 - 60;
-                const z = Math.floor(index / 4) * 40 - 20;
-
-                const group = new THREE.Group();
-
-                // Create a simple 3D model for the preview
-                const bodyGeometry = new THREE.BoxGeometry(5, 1, 10);
-                const bodyMaterial = new THREE.MeshStandardMaterial({
-                    color: skinHexMap[customSkin] || 0x5a697c,
-                    roughness: 0.4
-                });
-                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-                group.add(body);
-
-                // Wings
-                const wingGeometry = new THREE.BoxGeometry(8, 0.2, 2);
-                const wingL = new THREE.Mesh(wingGeometry, bodyMaterial);
-                wingL.position.set(-2.5, 0, 0);
-                wingL.rotation.y = 0.2;
-                group.add(wingL);
-
-                const wingR = wingL.clone();
-                wingR.position.x = 2.5;
-                wingR.rotation.y = -0.2;
-                group.add(wingR);
-
-                // Tail
-                const tailGeometry = new THREE.BoxGeometry(1, 2, 1);
-                const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
-                tail.position.set(0, 0, 4);
-                group.add(tail);
-
-                // Position and add to scene
-                group.position.set(x, 1, z);
-                group.userData = {
-                    type: key,
-                    profile: profile,
-                    selectable: true
-                };
-
-                scene.add(group);
-                walkAircraftPreviews.push({ group, key });
-
-                // Add name tag
-                const nameTagGeometry = new THREE.PlaneGeometry(10, 2);
-                const nameTagMaterial = new THREE.MeshBasicMaterial({
-                    color: 0x000000,
-                    transparent: true,
-                    opacity: 0.7
-                });
-                const nameTag = new THREE.Mesh(nameTagGeometry, nameTagMaterial);
-                nameTag.position.set(0, 3, 0);
-                group.add(nameTag);
-
-                index++;
-            });
-        }
-
-        function toggleWalkMode() {
-            if (flightActive) {
-                // Can't enter walk mode while flying
-                return;
-            }
-
-            walkModeActive = !walkModeActive;
-
-            if (walkModeActive) {
-                // Enter walk mode
-                document.getElementById('entry-screen').style.display = 'none';
-                document.getElementById('walk-mode-ui').style.display = 'block';
-                document.getElementById('sound-controls').style.display = 'block';
-
-                // Initialize walk mode if not already done
-                if (!walkCamera) {
-                    initWalkMode();
-                }
-
-                // Set camera
-                camera = walkCamera;
-                walkCamera.position.set(0, 2, 5);
-                walkCamera.lookAt(0, 0, 0);
-
-                // Hide aircraft group
-                aircraftGroup.visible = false;
-
-                // Show walk mode elements
-                document.getElementById('world-elements').style.display = 'none';
-
-                // Update walk mode aircraft
-                updateWalkModeAircraft();
-
-            } else {
-                // Exit walk mode
-                document.getElementById('entry-screen').style.display = 'flex';
-                document.getElementById('entry-screen').style.opacity = '1';
-                document.getElementById('walk-mode-ui').style.display = 'none';
-
-                // Restore camera
-                camera = cockpitCamera;
-
-                // Show aircraft group
-                aircraftGroup.visible = true;
-
-                // Show world elements
-                document.getElementById('world-elements').style.display = 'block';
-
-                // Clean up walk mode
-                walkAircraftPreviews.forEach(preview => {
-                    scene.remove(preview.group);
-                });
-                walkAircraftPreviews = [];
-            }
-        }
-
-        function checkWalkModeInteractions() {
-            if (!walkModeActive || !walkCamera) return;
-
-            // Check if looking at an aircraft
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(new THREE.Vector2(0, 0), walkCamera);
-
-            const intersects = raycaster.intersectObjects(
-                walkAircraftPreviews.map(p => p.group)
-            );
-
-            if (intersects.length > 0) {
-                const selected = intersects[0].object.parent;
-                if (selected.userData.selectable) {
-                    // Highlight the selected aircraft
-                    selected.children[0].material.color.setHex(0x17b978);
-
-                    // Show tooltip
-                    const tooltip = document.getElementById('tooltip');
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = (window.innerWidth / 2) + 'px';
-                    tooltip.style.top = (window.innerHeight / 2 - 50) + 'px';
-                    tooltip.innerHTML = `
-                        <strong>${selected.userData.profile.name}</strong><br>
-                        Press E to select
-                    `;
-                }
-            } else {
-                // Reset colors
-                walkAircraftPreviews.forEach(preview => {
-                    preview.group.children[0].material.color.setHex(skinHexMap[customSkin] || 0x5a697c);
-                });
-
-                // Hide tooltip
-                document.getElementById('tooltip').style.display = 'none';
-            }
+            document.getElementById('entry-screen').style.display = 'flex'; document.getElementById('entry-screen').style.opacity = '1';
         }
 
         // --- MOUSE MAPPING POV INTERCEPT HANDLERS ---
         window.addEventListener('mousedown', (e) => {
-            if (walkModeActive) {
-                // In walk mode, mouse controls look
-                return;
-            }
-
             if (!flightActive) return;
-
-            if (e.button === 0) { // Left mouse button
-                isMouseDragging = true;
-                lastMouseCoordinateX = e.clientX;
-                lastMouseCoordinateY = e.clientY;
-
-                if (currentCameraView !== 'cockpit' && currentCameraView !== 'firstperson' && currentCameraView !== 'gunner') {
-                    document.getElementById('pov-state').innerText = "MANUAL ORBIT";
-                    document.getElementById('pov-state').style.color = "#ffaa00";
-                }
-            }
+            isMouseDragging = true;
+            lastMouseCoordinateX = e.clientX;
+            lastMouseCoordinateY = e.clientY;
+            document.getElementById('pov-state').innerText = "MANUAL ORBIT";
+            document.getElementById('pov-state').style.color = "#ffaa00";
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (walkModeActive) {
-                // In walk mode, mouse controls look
-                walkRotation.y -= e.movementX * 0.002;
-                walkRotation.x = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, walkRotation.x - e.movementY * 0.002));
-
-                // Update camera rotation
-                walkCamera.rotation.order = 'YXZ';
-                walkCamera.rotation.y = walkRotation.y;
-                walkCamera.rotation.x = walkRotation.x;
-
-                // Update camera position based on rotation
-                const forward = new THREE.Vector3(
-                    Math.sin(walkRotation.y) * Math.cos(walkRotation.x),
-                    Math.sin(walkRotation.x),
-                    Math.cos(walkRotation.y) * Math.cos(walkRotation.x)
-                ).normalize();
-
-                const right = new THREE.Vector3(
-                    Math.sin(walkRotation.y - Math.PI/2),
-                    0,
-                    Math.cos(walkRotation.y - Math.PI/2)
-                ).normalize();
-
-                walkCamera.position.set(
-                    walkPosition.x,
-                    walkPosition.y + 1.7, // Eye height
-                    walkPosition.z
-                );
-
-                // Check for interactions
-                checkWalkModeInteractions();
-
-                return;
-            }
-
             if (!flightActive || !isMouseDragging) return;
+            let deltaX = e.clientX - lastMouseCoordinateX;
+            let deltaY = e.clientY - lastMouseCoordinateY;
 
-            if (currentCameraView === 'cockpit' || currentCameraView === 'firstperson' || currentCameraView === 'gunner') {
-                // In cockpit view, mouse controls look
-                const deltaX = e.clientX - lastMouseCoordinateX;
-                const deltaY = e.clientY - lastMouseCoordinateY;
+            cameraOrbitTheta += deltaX * 0.015;
+            cameraOrbitPhi = Math.max(-0.6, Math.min(1.2, cameraOrbitPhi + deltaY * 0.012));
 
-                // Limit pitch rotation
-                const newPitch = aircraftGroup.rotation.x + deltaY * 0.001;
-                aircraftGroup.rotation.x = Math.max(-Math.PI/4, Math.min(Math.PI/4, newPitch));
-
-                // Yaw rotation
-                aircraftGroup.rotation.y += deltaX * 0.001;
-
-                // Roll rotation based on mouse movement
-                aircraftGroup.rotation.z = THREE.MathUtils.lerp(aircraftGroup.rotation.z, -deltaX * 0.0005, 0.1);
-
-                lastMouseCoordinateX = e.clientX;
-                lastMouseCoordinateY = e.clientY;
-            } else {
-                // In other views, mouse orbits the aircraft
-                let deltaX = e.clientX - lastMouseCoordinateX;
-                let deltaY = e.clientY - lastMouseCoordinateY;
-
-                cameraOrbitTheta += deltaX * 0.015;
-                cameraOrbitPhi = Math.max(-0.6, Math.min(1.2, cameraOrbitPhi + deltaY * 0.012));
-
-                lastMouseCoordinateX = e.clientX;
-                lastMouseCoordinateY = e.clientY;
-            }
+            lastMouseCoordinateX = e.clientX;
+            lastMouseCoordinateY = e.clientY;
         });
 
         window.addEventListener('mouseup', () => {
-            if (walkModeActive) return;
-
             if (!flightActive) return;
             isMouseDragging = false;
-
-            if (currentCameraView !== 'cockpit' && currentCameraView !== 'firstperson' && currentCameraView !== 'gunner') {
-                document.getElementById('pov-state').innerText = "AUTO-TRACK";
-                document.getElementById('pov-state').style.color = "#00ff66";
-            }
-        });
-
-        window.addEventListener('wheel', (e) => {
-            if (!flightActive) return;
-
-            // Zoom in/out for external cameras
-            if (currentCameraView === 'chase' || currentCameraView === 'external' || currentCameraView === 'topdown') {
-                const delta = e.deltaY > 0 ? -2 : 2;
-                if (currentCameraView === 'chase') {
-                    chaseCamera.position.z += delta;
-                } else if (currentCameraView === 'external') {
-                    externalCamera.position.x += delta * 0.5;
-                    externalCamera.position.z += delta * 0.5;
-                } else if (currentCameraView === 'topdown') {
-                    topdownCamera.position.y += delta;
-                }
-            }
+            document.getElementById('pov-state').innerText = "AUTO-TRACK";
+            document.getElementById('pov-state').style.color = "#00ff66";
         });
 
         // --- WEAPON LAUNCH EXECUTIONS ---
-        const laserProjectiles = [];
-        const missileProjectiles = [];
-
         function fireLaserCannon() {
-            if (!activeProfile.isMilitary || !flightActive) return;
-
-            soundManager.play('gunfire');
-
-            const laserGeo = new THREE.CylinderGeometry(0.06, 0.06, 4.2);
-            laserGeo.rotateX(Math.PI/2);
+            if (!activeProfile.isMilitary) return;
+            
+            const laserGeo = new THREE.CylinderGeometry(0.06, 0.06, 4.2); laserGeo.rotateX(Math.PI/2);
             const laserMat = new THREE.MeshBasicMaterial({ color: laserHexMap[customLaserColor] });
-
+            
             [-0.7, 0.7].forEach(offset => {
                 const laser = new THREE.Mesh(laserGeo, laserMat);
                 laser.position.copy(aircraftGroup.position);
                 laser.rotation.copy(aircraftGroup.rotation);
                 laser.translateX(offset);
-
+                
                 const headingVector = new THREE.Vector3(0, 0, -1).applyQuaternion(aircraftGroup.quaternion);
-                laserProjectiles.push({
-                    mesh: laser,
-                    vector: headingVector,
-                    life: 60,
-                    speed: 15
-                });
+                laserProjectiles.push({ mesh: laser, vector: headingVector, life: 60 });
                 scene.add(laser);
-            });
-        }
-
-        function fireMissile() {
-            if (!activeProfile.isMilitary || !flightActive) return;
-
-            soundManager.play('gunfire');
-
-            const missileGeo = new THREE.CylinderGeometry(0.1, 0.08, 2, 8);
-            missileGeo.rotateX(Math.PI/2);
-            const missileMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
-
-            [-1.5, 1.5].forEach(offset => {
-                const missile = new THREE.Mesh(missileGeo, missileMat);
-                missile.position.copy(aircraftGroup.position);
-                missile.rotation.copy(aircraftGroup.rotation);
-                missile.translateX(offset);
-                missile.translateZ(-1);
-
-                const headingVector = new THREE.Vector3(0, 0, -1).applyQuaternion(aircraftGroup.quaternion);
-                missileProjectiles.push({
-                    mesh: missile,
-                    vector: headingVector,
-                    life: 180,
-                    speed: 8,
-                    target: null
-                });
-                scene.add(missile);
             });
         }
 
         // --- KEYSTROKE CAPTURES ---
         window.onkeydown = (e) => {
-            const key = e.key.toLowerCase();
-            inputState[key] = true;
-
-            if (key === 'r' && !flightActive && integrity <= 0) {
-                returnToHangar();
-            } else if (key === 'escape') {
-                if (flightActive) {
-                    togglePause();
-                } else if (walkModeActive) {
-                    toggleWalkMode();
-                }
-            } else if (key === 'p' && flightActive) {
-                togglePause();
-            } else if (key === 'e') {
-                if (walkModeActive) {
-                    // In walk mode, try to select an aircraft
-                    const raycaster = new THREE.Raycaster();
-                    raycaster.setFromCamera(new THREE.Vector2(0, 0), walkCamera);
-
-                    const intersects = raycaster.intersectObjects(
-                        walkAircraftPreviews.map(p => p.group)
-                    );
-
-                    if (intersects.length > 0) {
-                        const selected = intersects[0].object.parent;
-                        if (selected.userData.selectable) {
-                            selectHangarPlane(selected.userData.type, document.querySelector(`.card-option[data-key="${selected.userData.type}"]`));
-                            toggleWalkMode();
-                            engageFlight();
-                        }
-                    }
-                } else if (flightActive && activeProfile.isMilitary) {
-                    // In flight, fire missile
-                    fireMissile();
-                }
-            } else if (key === 'c' && flightActive) {
-                // Toggle camera view
-                const views = ['cockpit', 'chase', 'external', 'topdown', 'firstperson', 'gunner'];
-                const currentIndex = views.indexOf(currentCameraView);
-                const nextIndex = (currentIndex + 1) % views.length;
-                setCameraView(views[nextIndex], views[nextIndex].toUpperCase(), document.querySelector(`.color-btn[data-view="${views[nextIndex]}"]`));
-            } else if (key === 'g' && flightActive) {
-                // Toggle landing gear
-                isGearDeployed = !isGearDeployed;
-                soundManager.play('gear');
-
-                if (isGearDeployed) {
-                    leftGearGroup.scale.setScalar(1);
-                    rightGearGroup.scale.setScalar(1);
-                    noseGearGroup.scale.setScalar(1);
-                } else {
-                    leftGearGroup.scale.setScalar(0);
-                    rightGearGroup.scale.setScalar(0);
-                    noseGearGroup.scale.setScalar(0);
-                }
-            } else if (key === 'f' && flightActive) {
-                // Toggle flaps
-                const newFlaps = flapsDeployment === 0 ? 30 : 0;
-                updateFlapsValue(newFlaps);
-            } else if (key === 'b' && flightActive) {
-                // Toggle airbrakes
-                const newAirbrakes = airbrakesDeployment === 0 ? 100 : 0;
-                updateAirbrakesValue(newAirbrakes);
-            } else if (key === 'm' && flightActive) {
-                // Toggle navigation map
-                const navMap = document.getElementById('navigation-map');
-                navMap.style.display = navMap.style.display === 'none' ? 'block' : 'none';
-            } else if (key === 'n' && flightActive) {
-                // Toggle compass
-                const compass = document.getElementById('compass');
-                compass.style.display = compass.style.display === 'none' ? 'block' : 'none';
-            } else if (key === 'tab' && flightActive) {
-                // Switch to next aircraft (for testing)
-                e.preventDefault();
-                const keys = Object.keys(fleetProfiles);
-                const currentIndex = keys.indexOf(selectedType);
-                const nextIndex = (currentIndex + 1) % keys.length;
-                selectHangarPlane(keys[nextIndex], document.querySelector(`.card-option:nth-child(${nextIndex + 1})`));
-                if (flightActive) {
-                    manufactureAircraft();
-                    updateCameraPosition();
-                }
-            }
-
-            // Walk mode controls
-            if (walkModeActive) {
-                if (key === 'w') {
-                    const forward = new THREE.Vector3(
-                        Math.sin(walkRotation.y) * Math.cos(walkRotation.x),
-                        Math.sin(walkRotation.x),
-                        Math.cos(walkRotation.y) * Math.cos(walkRotation.x)
-                    ).normalize();
-
-                    walkPosition.x += forward.x * (isRunning ? walkSpeed * 2 : walkSpeed);
-                    walkPosition.z += forward.z * (isRunning ? walkSpeed * 2 : walkSpeed);
-                    walkCamera.position.x = walkPosition.x;
-                    walkCamera.position.z = walkPosition.z;
-                }
-                if (key === 's') {
-                    const forward = new THREE.Vector3(
-                        Math.sin(walkRotation.y) * Math.cos(walkRotation.x),
-                        Math.sin(walkRotation.x),
-                        Math.cos(walkRotation.y) * Math.cos(walkRotation.x)
-                    ).normalize();
-
-                    walkPosition.x -= forward.x * (isRunning ? walkSpeed * 2 : walkSpeed);
-                    walkPosition.z -= forward.z * (isRunning ? walkSpeed * 2 : walkSpeed);
-                    walkCamera.position.x = walkPosition.x;
-                    walkCamera.position.z = walkPosition.z;
-                }
-                if (key === 'a') {
-                    const right = new THREE.Vector3(
-                        Math.sin(walkRotation.y - Math.PI/2),
-                        0,
-                        Math.cos(walkRotation.y - Math.PI/2)
-                    ).normalize();
-
-                    walkPosition.x -= right.x * (isRunning ? walkSpeed * 2 : walkSpeed);
-                    walkPosition.z -= right.z * (isRunning ? walkSpeed * 2 : walkSpeed);
-                    walkCamera.position.x = walkPosition.x;
-                    walkCamera.position.z = walkPosition.z;
-                }
-                if (key === 'd') {
-                    const right = new THREE.Vector3(
-                        Math.sin(walkRotation.y - Math.PI/2),
-                        0,
-                        Math.cos(walkRotation.y - Math.PI/2)
-                    ).normalize();
-
-                    walkPosition.x += right.x * (isRunning ? walkSpeed * 2 : walkSpeed);
-                    walkPosition.z += right.z * (isRunning ? walkSpeed * 2 : walkSpeed);
-                    walkCamera.position.x = walkPosition.x;
-                    walkCamera.position.z = walkPosition.z;
-                }
-                if (key === 'shift') {
-                    isRunning = true;
-                }
-            }
+            const key = e.key.toLowerCase(); inputState[key] = true;
+            if (key === 'r' && !flightActive && integrity <= 0) returnToHangar();
         };
-
-        window.onkeyup = (e) => {
-            const key = e.key.toLowerCase();
-            inputState[key] = false;
-
-            if (key === 'shift' && walkModeActive) {
-                isRunning = false;
-            }
-        };
+        window.onkeyup = (e) => { inputState[e.key.toLowerCase()] = false; };
 
         // --- RUNTIME SIMULATION LOOPS ---
-        let lastTime = 0;
-        let deltaTime = 0;
+        function runSimulationLoops() {
+            if (!flightActive) return;
 
-        function runSimulationLoops(time) {
-            deltaTime = (time - lastTime) / 1000; // Convert to seconds
-            lastTime = time;
+            let rollingSpeedModifier = activeProfile.rollRate * (1.3 - (customWingspanScale * 0.25));
 
-            if (paused || !flightActive) {
-                requestAnimationFrame(runSimulationLoops);
-                renderer.render(scene, camera);
-                return;
-            }
+            if (inputState['w']) aircraftGroup.rotateX(activeProfile.pitchRate);
+            if (inputState['s']) aircraftGroup.rotateX(-activeProfile.pitchRate);
+            if (inputState['a']) aircraftGroup.rotateZ(rollingSpeedModifier);
+            if (inputState['d']) aircraftGroup.rotateZ(-rollingSpeedModifier);
+            if (inputState['q']) aircraftGroup.rotateY(activeProfile.pitchRate * 0.6);
+            if (inputState['e']) aircraftGroup.rotateY(-activeProfile.pitchRate * 0.6);
 
-            // --- PHYSICS SIMULATION ---
-            // Calculate angle of attack (simplified)
-            const velocityVector = new THREE.Vector3(0, 0, -1).applyQuaternion(aircraftGroup.quaternion);
-            const upVector = new THREE.Vector3(0, 1, 0);
-            angleOfAttack = Math.acos(velocityVector.dot(upVector) / (velocityVector.length() * upVector.length()));
-            angleOfAttack = THREE.MathUtils.radToDeg(angleOfAttack) - 90;
-            angleOfAttack = Math.abs(angleOfAttack);
+            if (inputState['g']) { fireLaserCannon(); inputState['g'] = false; }
 
-            // Calculate vertical speed
-            const prevY = aircraftGroup.position.y;
-            currentAltitude = aircraftGroup.position.y;
-
-            // --- CONTROLS ---
-            const rollingSpeedModifier = activeProfile.rollRate * (1.3 - (customWingspanScale * 0.25));
-
-            // Pitch control
-            if (inputState['w']) {
-                aircraftGroup.rotateX(activeProfile.pitchRate * deltaTime * 10);
-            }
-            if (inputState['s']) {
-                aircraftGroup.rotateX(-activeProfile.pitchRate * deltaTime * 10);
-            }
-
-            // Roll control
-            if (inputState['a']) {
-                aircraftGroup.rotateZ(rollingSpeedModifier * deltaTime * 10);
-                // Animate ailerons
-                ailerons.forEach((aileron, index) => {
-                    aileron.rotation.z = THREE.MathUtils.lerp(aileron.rotation.z, (index % 2 === 0 ? 0.3 : -0.3), 0.2);
-                });
-            } else if (inputState['d']) {
-                aircraftGroup.rotateZ(-rollingSpeedModifier * deltaTime * 10);
-                // Animate ailerons
-                ailerons.forEach((aileron, index) => {
-                    aileron.rotation.z = THREE.MathUtils.lerp(aileron.rotation.z, (index % 2 === 0 ? -0.3 : 0.3), 0.2);
-                });
-            } else {
-                // Return ailerons to neutral
-                ailerons.forEach(aileron => {
-                    aileron.rotation.z = THREE.MathUtils.lerp(aileron.rotation.z, 0, 0.1);
-                });
-            }
-
-            // Yaw control
-            if (inputState['q']) {
-                aircraftGroup.rotateY(activeProfile.pitchRate * 0.6 * deltaTime * 10);
-                // Animate rudder
-                rudder.forEach(r => {
-                    r.rotation.y = THREE.MathUtils.lerp(r.rotation.y, 0.2, 0.2);
-                });
-            } else if (inputState['e']) {
-                aircraftGroup.rotateY(-activeProfile.pitchRate * 0.6 * deltaTime * 10);
-                // Animate rudder
-                rudder.forEach(r => {
-                    r.rotation.y = THREE.MathUtils.lerp(r.rotation.y, -0.2, 0.2);
-                });
-            } else {
-                // Return rudder to neutral
-                rudder.forEach(r => {
-                    r.rotation.y = THREE.MathUtils.lerp(r.rotation.y, 0, 0.1);
-                });
-            }
-
-            // Elevator control (pitch)
-            if (inputState['w'] || inputState['s']) {
-                elevators.forEach(elevator => {
-                    elevator.rotation.x = THREE.MathUtils.lerp(
-                        elevator.rotation.x,
-                        inputState['w'] ? 0.2 : -0.2,
-                        0.2
-                    );
-                });
-            } else {
-                elevators.forEach(elevator => {
-                    elevator.rotation.x = THREE.MathUtils.lerp(elevator.rotation.x, 0, 0.1);
-                });
-            }
-
-            // --- THROTTLE CONTROL ---
             if (inputState[' ']) {
-                // Afterburner or full throttle
-                targetSpeed = activeProfile.speed * (activeProfile.hasAfterburner ? 2.5 : 1.8);
-
-                if (leftExhaustGlow) {
-                    leftExhaustGlow.visible = true;
-                    rightExhaustGlow.visible = true;
-                    leftExhaustGlow.material.color.setHex(0xff4400);
-                    rightExhaustGlow.material.color.setHex(0xff4400);
-                }
-
-                // Engine sound
-                soundManager.setEngineVolume(1.0);
-                soundManager.setWindVolume(0.8);
-
-                // Fuel consumption
-                fuel -= activeProfile.fuelBurnRate * deltaTime * 0.01;
-            } else if (inputState['shift']) {
-                // Reduced throttle
-                targetSpeed = activeProfile.speed * 0.8;
-                soundManager.setEngineVolume(0.5);
-                soundManager.setWindVolume(0.4);
+                targetSpeed = activeProfile.speed * 1.6;
+                if (leftExhaustGlow) { leftExhaustGlow.visible = true; rightExhaustGlow.visible = true; }
             } else {
-                // Normal throttle
                 targetSpeed = activeProfile.speed;
-                soundManager.setEngineVolume(0.7);
-                soundManager.setWindVolume(0.6);
-
-                if (leftExhaustGlow) {
-                    leftExhaustGlow.visible = true;
-                    rightExhaustGlow.visible = true;
-                    leftExhaustGlow.material.color.setHex(0x3388ff);
-                    rightExhaustGlow.material.color.setHex(0x3388ff);
-                }
+                if (leftExhaustGlow) { leftExhaustGlow.visible = false; rightExhaustGlow.visible = false; }
             }
+            speed = THREE.MathUtils.lerp(speed, targetSpeed, 0.05);
+            aircraftGroup.position.y -= activeProfile.mass * (1.1 - (speed / (activeProfile.speed * 1.6)));
+            aircraftGroup.translateZ(-speed);
 
-            // If no throttle input, glide
-            if (!inputState[' '] && !inputState['shift']) {
-                if (leftExhaustGlow) {
-                    leftExhaustGlow.visible = false;
-                    rightExhaustGlow.visible = false;
-                }
-            }
+            propEngineBlades.forEach(b => { b.rotation.z += speed * 0.65; });
 
-            // --- SPEED AND MOVEMENT ---
-            // Smooth speed transition
-            speed = THREE.MathUtils.lerp(speed, targetSpeed, 0.05 * deltaTime * 60);
-
-            // Apply air resistance based on flaps and airbrakes
-            const dragFactor = 1 + (flapsDeployment / 100) * 0.5 + (airbrakesDeployment / 100) * 1.0;
-            const effectiveSpeed = speed / dragFactor;
-
-            // Calculate lift based on angle of attack and speed
-            const liftFactor = Math.sin(THREE.MathUtils.degToRad(angleOfAttack)) * effectiveSpeed * 0.1;
-            const lift = liftFactor * (1 + (flapsDeployment / 100) * 0.8);
-
-            // Calculate gravity
-            const gravity = activeProfile.mass * 9.8 * 0.001;
-
-            // Apply forces
-            aircraftGroup.position.y += (lift - gravity) * deltaTime * 60;
-
-            // Forward movement
-            const forwardVector = new THREE.Vector3(0, 0, -1).applyQuaternion(aircraftGroup.quaternion);
-            aircraftGroup.position.addScaledVector(forwardVector, effectiveSpeed * deltaTime * 60);
-
-            // Calculate vertical speed
-            verticalSpeed = (aircraftGroup.position.y - prevY) / deltaTime * 196.85; // ft/min
-
-            // --- STALL MECHANICS ---
-            // Check for stall (high angle of attack at low speed)
-            const stallThreshold = activeProfile.stallSpeed / 220;
-            if (angleOfAttack > 15 && speed < stallThreshold) {
-                isStalled = true;
-                soundManager.fadeIn('stall', 500);
+            if (aircraftGroup.position.y < 45) {
+                isGearDeployed = true;
+                leftGearGroup.scale.setScalar(1); rightGearGroup.scale.setScalar(1);
             } else {
-                isStalled = false;
-                soundManager.fadeOut('stall', 500);
+                isGearDeployed = false;
+                leftGearGroup.scale.setScalar(0); rightGearGroup.scale.setScalar(0);
             }
 
-            // Stall effects
-            if (isStalled) {
-                // Reduce lift
-                aircraftGroup.position.y -= gravity * deltaTime * 60 * 0.5;
-
-                // Shake effect
-                aircraftGroup.position.x += (Math.random() - 0.5) * 0.1;
-                aircraftGroup.position.z += (Math.random() - 0.5) * 0.1;
-
-                // Visual warning
-                if (!stallWarning) {
-                    stallWarning = true;
-                    document.getElementById('faults-display').style.display = 'block';
-                    addFault("STALL WARNING", "High angle of attack at low speed");
-                }
-            } else {
-                if (stallWarning) {
-                    stallWarning = false;
-                    removeFault("STALL WARNING");
-                    if (activeFaults.length === 0) {
-                        document.getElementById('faults-display').style.display = 'none';
-                    }
-                }
-            }
-
-            // --- LANDING GEAR PHYSICS ---
-            const groundHeight = lookupHeight(aircraftGroup.position.x, aircraftGroup.position.z);
-            const gearHeight = isGearDeployed ? 0.5 : 0;
-
-            // Check if on ground
-            if (aircraftGroup.position.y <= groundHeight + gearHeight) {
-                aircraftGroup.position.y = groundHeight + gearHeight;
-
-                // If moving fast on ground, it's a crash
-                if (speed > activeProfile.stallSpeed / 220 * 1.5 && !isGearDeployed) {
-                    integrity -= speed * 20 * deltaTime * 60;
-                    if (integrity <= 0) {
-                        forceCrashState();
-                        return;
-                    }
-                }
-
-                // Apply ground friction
-                speed = THREE.MathUtils.lerp(speed, 0, 0.1 * deltaTime * 60);
-
-                // If stopped, deploy gear automatically
-                if (speed < 0.05 && !isGearDeployed) {
-                    isGearDeployed = true;
-                    leftGearGroup.scale.setScalar(1);
-                    rightGearGroup.scale.setScalar(1);
-                    noseGearGroup.scale.setScalar(1);
-                    soundManager.play('gear');
-                }
-            } else {
-                // In air, retract gear if fast enough
-                if (speed > activeProfile.stallSpeed / 220 * 1.2 && isGearDeployed) {
-                    isGearDeployed = false;
-                    leftGearGroup.scale.setScalar(0);
-                    rightGearGroup.scale.setScalar(0);
-                    noseGearGroup.scale.setScalar(0);
-                    soundManager.play('gear');
-                }
-            }
-
-            // --- FUEL SYSTEM ---
-            fuel -= activeProfile.fuelBurnRate * deltaTime * 0.001;
-            if (fuel <= 0) {
-                fuel = 0;
-                // Engine failure due to fuel
-                if (activeProfile.engineCount >= 2) {
-                    engine1Health = 0;
-                    engine2Health = 0;
-                } else {
-                    engine1Health = 0;
-                }
-                addFault("FUEL EXHAUSTED", "Out of fuel - Engines stopped");
-            }
-
-            // --- ENGINE HEALTH ---
-            if (engine1Health <= 0 && engine2Health <= 0) {
-                targetSpeed = 0;
-                if (leftExhaustGlow) {
-                    leftExhaustGlow.visible = false;
-                    rightExhaustGlow.visible = false;
-                }
-                soundManager.fadeOut('engine', 2000);
-            } else if (engine1Health <= 0 || engine2Health <= 0) {
-                targetSpeed = activeProfile.speed * 0.5;
-                if (leftExhaustGlow) {
-                    leftExhaustGlow.visible = engine1Health > 0;
-                    rightExhaustGlow.visible = engine2Health > 0;
-                }
-            }
-
-            // --- FAULTS SYSTEM ---
-            // Random faults
-            if (Math.random() < 0.001) {
-                const possibleFault = possibleFaults[Math.floor(Math.random() * possibleFaults.length)];
-                if (Math.random() < possibleFault.probability) {
-                    possibleFault.effect();
-                    addFault(possibleFault.name, possibleFault.message);
-                }
-            }
-
-            // --- PROJECTILES ---
-            // Update laser projectiles
             for (let i = laserProjectiles.length - 1; i >= 0; i--) {
                 let projectile = laserProjectiles[i];
-                projectile.mesh.position.addScaledVector(projectile.vector, projectile.speed * deltaTime * 60);
-                projectile.life -= deltaTime * 60;
-
-                // Check for collisions with terrain or obstacles
-                const projPos = projectile.mesh.position;
-                const projHeight = lookupHeight(projPos.x, projPos.z);
-
-                if (projPos.y <= projHeight || projectile.life <= 0) {
+                projectile.mesh.position.addScaledVector(projectile.vector, 12.0);
+                projectile.life--;
+                if (projectile.life <= 0) {
                     scene.remove(projectile.mesh);
                     laserProjectiles.splice(i, 1);
                 }
             }
 
-            // Update missile projectiles
-            for (let i = missileProjectiles.length - 1; i >= 0; i--) {
-                let projectile = missileProjectiles[i];
-                projectile.mesh.position.addScaledVector(projectile.vector, projectile.speed * deltaTime * 60);
-                projectile.life -= deltaTime * 60;
-
-                // Simple gravity for missiles
-                projectile.mesh.position.y -= 0.05 * deltaTime * 60;
-
-                // Check for collisions
-                const projPos = projectile.mesh.position;
-                const projHeight = lookupHeight(projPos.x, projPos.z);
-
-                if (projPos.y <= projHeight || projectile.life <= 0) {
-                    scene.remove(projectile.mesh);
-                    missileProjectiles.splice(i, 1);
-                    soundManager.play('explosion');
-                }
-            }
-
-            // --- NPC PLANES ---
-            updateNPCPlanes(deltaTime);
-
-            // --- COLLISION DETECTION ---
-            // Aircraft AABB
+            // --- ACCURATE AABB FLIGHT BOUNDING BOX INTERSECTS ---
             let px = aircraftGroup.position.x;
             let py = aircraftGroup.position.y;
             let pz = aircraftGroup.position.z;
 
-            let calculatedWingReach = (activeProfile.wingSpan * 0.3) * customWingspanScale;
-            let planeLength = activeProfile.length * 0.3;
+            let calculatedWingReach = (activeProfile.type === "heavy" ? 6.0 : (activeProfile.type === "prop" ? 3.25 : 3.9)) * customWingspanScale;
 
             let planeAABB = {
-                minX: px - calculatedWingReach,
-                maxX: px + calculatedWingReach,
-                minY: py - 1,
-                maxY: py + 2,
-                minZ: pz - planeLength,
-                maxZ: pz + planeLength
+                minX: px - calculatedWingReach, maxX: px + calculatedWingReach,
+                minY: py - 0.6, maxY: py + 1.2,
+                minZ: pz - 4.5, maxZ: pz + 4.5
             };
 
-            // Check ground collision
             let currentGroundAltitude = lookupHeight(px, pz);
             if (py <= currentGroundAltitude + 0.8) {
-                if (!isGearDeployed || speed > activeProfile.stallSpeed / 220 * 1.5) {
-                    integrity -= (speed * 20 + (100 - py + currentGroundAltitude) * 2) * deltaTime * 60;
-                    if (integrity <= 0) {
-                        forceCrashState();
-                        return;
-                    }
+                if (!isGearDeployed || speed > activeProfile.speed * 1.25) {
+                    integrity = 0; forceCrashState(); return;
                 }
             }
 
-            // Check obstacle collisions
             for (let i = 0; i < terrainObstacles.length; i++) {
                 let obs = terrainObstacles[i];
                 let hitX = planeAABB.maxX >= obs.minX && planeAABB.minX <= obs.maxX;
@@ -3533,626 +615,69 @@
                 let hitZ = planeAABB.maxZ >= obs.minZ && planeAABB.minZ <= obs.maxZ;
 
                 if (hitX && hitY && hitZ) {
-                    integrity -= 10 * deltaTime * 60;
-                    if (integrity <= 0) {
-                        forceCrashState();
-                        return;
-                    }
+                    integrity = 0; forceCrashState(); return;
                 }
             }
 
-            // Check NPC collisions
-            for (let i = 0; i < npcPlanes.length; i++) {
-                const npc = npcPlanes[i];
-                const npcPos = npc.mesh.position;
-
-                const distance = Math.sqrt(
-                    Math.pow(px - npcPos.x, 2) +
-                    Math.pow(py - npcPos.y, 2) +
-                    Math.pow(pz - npcPos.z, 2)
-                );
-
-                if (distance < 20) {
-                    // Collision with NPC
-                    integrity -= 5 * deltaTime * 60;
-                    npc.health -= 5 * deltaTime * 60;
-
-                    if (integrity <= 0) {
-                        forceCrashState();
-                        return;
-                    }
-
-                    if (npc.health <= 0) {
-                        // NPC destroyed
-                        scene.remove(npc.mesh);
-                        npcPlanes.splice(i, 1);
-                        soundManager.play('explosion');
-                    }
-                }
-            }
-
-            // --- ATMOSPHERE CYCLES ---
-            clockTime += deltaTime * 0.0001;
+            // Atmosphere Cycles
+            clockTime += 0.00005;
             let cycleVal = (Math.sin(clockTime * Math.PI * 2) + 1) / 2;
+            scene.background.setHSL(0.58, 0.5, cycleVal * 0.4 + 0.1);
+            scene.fog.color.setHSL(0.58, 0.5, cycleVal * 0.4 + 0.1);
 
-            // Day/night cycle
-            const skyColorHSL = { h: 0.58, s: 0.5, l: cycleVal * 0.4 + 0.1 };
-            scene.background.setHSL(skyColorHSL.h, skyColorHSL.s, skyColorHSL.l);
-            scene.fog.color.setHSL(skyColorHSL.h, skyColorHSL.s, skyColorHSL.l);
-
-            // Update sun position
-            sunLight.position.set(
-                Math.cos(clockTime * Math.PI * 2) * 500,
-                Math.sin(clockTime * Math.PI * 2) * 300 + 200,
-                Math.sin(clockTime * Math.PI * 2) * 200
-            );
-
-            // --- UPDATE HUD ---
-            updateHUD();
-
-            // --- UPDATE CAMERA ---
-            updateCameraPosition();
-            trackCameraSpring();
-
-            // --- RENDER ---
-            renderer.render(scene, camera);
-
-            requestAnimationFrame(runSimulationLoops);
-        }
-
-        function updateHUD() {
-            if (!flightActive) return;
-
-            // Altitude
-            document.getElementById('dash-alt').innerText = Math.floor(currentAltitude * 3.3);
-
-            // Speed
-            document.getElementById('dash-spd').innerText = Math.floor(speed * activeProfile.maxSpeed * 0.4);
-
-            // Vertical speed
-            const vsColor = verticalSpeed > 0 ? "#00ff66" : (verticalSpeed < 0 ? "#ff0000" : "#ffffff");
-            document.getElementById('dash-vs').innerText = Math.floor(Math.abs(verticalSpeed));
-            document.getElementById('dash-vs').style.color = vsColor;
-
-            // Angle of attack
-            document.getElementById('dash-aoa').innerText = Math.floor(angleOfAttack);
-            document.getElementById('dash-aoa').style.color = angleOfAttack > 15 ? "#ff0000" : "#ffffff";
-
-            // Gear
-            document.getElementById('dash-gear').innerText = isGearDeployed ? "DOWN" : "UP";
+            // Sync Telemetry Display Texts
+            document.getElementById('dash-alt').innerText = Math.floor(py * 3.3);
+            document.getElementById('dash-spd').innerText = Math.floor(speed * 220);
+            document.getElementById('dash-gear').innerText = isGearDeployed ? "DEPLOYED" : "RETRACTED";
             document.getElementById('dash-gear').style.color = isGearDeployed ? "#00ff66" : "#ffaa00";
-
-            // Flaps
-            document.getElementById('dash-flaps').innerText = flapsDeployment + "%";
-
-            // Airbrakes
-            document.getElementById('dash-airbrakes').innerText = airbrakesDeployment === 0 ? "RETRACTED" :
-                                                                 (airbrakesDeployment === 100 ? "FULLY DEPLOYED" : Math.floor(airbrakesDeployment) + "%");
-
-            // Hull integrity
-            const hullColor = integrity > 50 ? "#00ff66" : (integrity > 20 ? "#ffaa00" : "#ff0000");
-            document.getElementById('dash-hull').innerText = Math.floor(integrity) + "%";
-            document.getElementById('dash-hull').style.color = hullColor;
-
-            // Fuel
-            const fuelColor = fuel > 20 ? "#00ff66" : (fuel > 10 ? "#ffaa00" : "#ff0000");
-            document.getElementById('dash-fuel').innerText = Math.floor(fuel) + "%";
-            document.getElementById('dash-fuel').style.color = fuelColor;
-
-            // Engine status
-            const engine1Color = engine1Health > 0 ? "#00ff66" : "#ff0000";
-            document.getElementById('dash-engine1').innerText = Math.floor(engine1Health) + "%";
-            document.getElementById('dash-engine1').style.color = engine1Color;
-
-            if (activeProfile.engineCount >= 2) {
-                document.getElementById('dash-engine2').parentElement.style.display = 'block';
-                const engine2Color = engine2Health > 0 ? "#00ff66" : "#ff0000";
-                document.getElementById('dash-engine2').innerText = Math.floor(engine2Health) + "%";
-                document.getElementById('dash-engine2').style.color = engine2Color;
-            } else {
-                document.getElementById('dash-engine2').parentElement.style.display = 'none';
-            }
-
-            // Clock
-            let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2, '0');
-            let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2, '0');
+            document.getElementById('dash-hull').innerText = integrity + "%";
+            
+            let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2,'0');
+            let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2,'0');
             document.getElementById('dash-time').innerText = `${hr}:${mn}`;
-
-            // Stall warning
-            if (isStalled) {
-                document.getElementById('dash-aoa').style.color = "#ff0000";
-                document.getElementById('dash-aoa').style.fontWeight = "bold";
-            } else {
-                document.getElementById('dash-aoa').style.color = "#ffffff";
-                document.getElementById('dash-aoa').style.fontWeight = "normal";
-            }
         }
 
         // --- RIGID INTERACTIVE ADVANCED MOUSE ORBIT RE-CENTER SPRING ---
         function trackCameraSpring() {
             if (!flightActive) return;
 
-            // For chase and external cameras, apply spring effect
-            if (currentCameraView === 'chase' || currentCameraView === 'external') {
-                const targetPosition = new THREE.Vector3(
-                    aircraftGroup.position.x + activeProfile.cameraPositions[currentCameraView].x,
-                    aircraftGroup.position.y + activeProfile.cameraPositions[currentCameraView].y,
-                    aircraftGroup.position.z + activeProfile.cameraPositions[currentCameraView].z
-                );
-
-                activeCamera.position.lerp(targetPosition, 0.1);
-                activeCamera.lookAt(aircraftGroup.position);
-            }
-        }
-
-        // --- COMPASS ---
-        let compassCanvas, compassCtx;
-        let navigationMapCanvas, navigationMapCtx;
-
-        function initCompass() {
-            compassCanvas = document.getElementById('compass-canvas');
-            compassCtx = compassCanvas.getContext('2d');
-
-            // Set canvas size
-            compassCanvas.width = 200;
-            compassCanvas.height = 200;
-
-            // Initial draw
-            drawCompass();
-        }
-
-        function drawCompass() {
-            if (!compassCtx) return;
-
-            const size = 200;
-            const center = size / 2;
-
-            // Clear
-            compassCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            compassCtx.fillRect(0, 0, size, size);
-
-            // Outer circle
-            compassCtx.strokeStyle = '#17b978';
-            compassCtx.lineWidth = 2;
-            compassCtx.beginPath();
-            compassCtx.arc(center, center, center - 2, 0, Math.PI * 2);
-            compassCtx.stroke();
-
-            // Center circle
-            compassCtx.beginPath();
-            compassCtx.arc(center, center, 5, 0, Math.PI * 2);
-            compassCtx.fillStyle = '#17b978';
-            compassCtx.fill();
-
-            // Direction markers
-            const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-            for (let i = 0; i < directions.length; i++) {
-                const angle = (i / directions.length) * Math.PI * 2 - Math.PI/2;
-                const x = center + Math.cos(angle) * (center - 20);
-                const y = center + Math.sin(angle) * (center - 20);
-
-                compassCtx.fillStyle = '#ffffff';
-                compassCtx.font = 'bold 12px Arial';
-                compassCtx.textAlign = 'center';
-                compassCtx.textBaseline = 'middle';
-                compassCtx.fillText(directions[i], x, y);
+            // Return camera orbit properties back to tail neutral when mouse is released
+            if (!isMouseDragging) {
+                cameraOrbitTheta = THREE.MathUtils.lerp(cameraOrbitTheta, 0, 0.08);
+                cameraOrbitPhi = THREE.MathUtils.lerp(cameraOrbitPhi, 0.16, 0.08);
             }
 
-            // Aircraft direction
-            const aircraftHeading = -aircraftGroup.rotation.y; // Convert to compass heading
-            const headingX = center + Math.cos(aircraftHeading) * (center - 15);
-            const headingY = center + Math.sin(aircraftHeading) * (center - 15);
+            // Calculate spherical displacement coordinate points relative to plane orientation
+            let cameraRadiusDistance = activeProfile.type === "heavy" ? 19.0 : 14.5;
+            
+            let sphericalOffset = new THREE.Vector3(
+                cameraRadiusDistance * Math.sin(cameraOrbitTheta) * Math.cos(cameraOrbitPhi),
+                cameraRadiusDistance * Math.sin(cameraOrbitPhi) + 2.2, // Elevation adjustment
+                cameraRadiusDistance * Math.cos(cameraOrbitTheta) * Math.cos(cameraOrbitPhi)
+            );
 
-            compassCtx.strokeStyle = '#ff0000';
-            compassCtx.lineWidth = 3;
-            compassCtx.beginPath();
-            compassCtx.moveTo(center, center);
-            compassCtx.lineTo(headingX, headingY);
-            compassCtx.stroke();
-
-            // Draw aircraft symbol
-            compassCtx.fillStyle = '#ff0000';
-            compassCtx.beginPath();
-            compassCtx.moveTo(headingX, headingY);
-            compassCtx.lineTo(headingX - 5, headingY - 3);
-            compassCtx.lineTo(headingX, headingY - 6);
-            compassCtx.lineTo(headingX + 5, headingY - 3);
-            compassCtx.closePath();
-            compassCtx.fill();
-
-            // Update current heading display
-            const degrees = THREE.MathUtils.radToDeg(aircraftHeading) % 360;
-            currentHeading = degrees < 0 ? degrees + 360 : degrees;
+            // Matrix Transform relative spatial positioning systems
+            let absoluteWorldOffset = sphericalOffset.applyMatrix4(aircraftGroup.matrixWorld);
+            camera.position.lerp(absoluteWorldOffset, 0.2); // Smooth position interpolation
+            
+            // Camera tracks slightly ahead of nose line
+            let targetLookPosition = new THREE.Vector3(0, 0.4, -3.0).applyMatrix4(aircraftGroup.matrixWorld);
+            camera.lookAt(targetLookPosition);
         }
 
-        function initNavigationMap() {
-            navigationMapCanvas = document.getElementById('nav-map-canvas');
-            navigationMapCtx = navigationMapCanvas.getContext('2d');
-
-            // Set canvas size
-            navigationMapCanvas.width = 300;
-            navigationMapCanvas.height = 300;
-
-            // Initial draw
-            drawNavigationMap();
+        function renderEngineLoop() {
+            requestAnimationFrame(renderEngineLoop);
+            runSimulationLoops();
+            trackCameraSpring();
+            renderer.render(scene, camera);
         }
 
-        function drawNavigationMap() {
-            if (!navigationMapCtx) return;
-
-            const size = 300;
-            const center = { x: size / 2, y: size / 2 };
-            const scale = size / (TERRAIN_SIZE * 0.002); // Scale to fit terrain
-
-            // Clear
-            navigationMapCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            navigationMapCtx.fillRect(0, 0, size, size);
-
-            // Draw terrain background
-            navigationMapCtx.fillStyle = '#1a365d';
-            navigationMapCtx.fillRect(0, 0, size, size);
-
-            // Draw grid
-            navigationMapCtx.strokeStyle = 'rgba(23, 185, 120, 0.3)';
-            navigationMapCtx.lineWidth = 1;
-
-            for (let i = 0; i < 10; i++) {
-                // Vertical lines
-                navigationMapCtx.beginPath();
-                navigationMapCtx.moveTo(i * (size / 10), 0);
-                navigationMapCtx.lineTo(i * (size / 10), size);
-                navigationMapCtx.stroke();
-
-                // Horizontal lines
-                navigationMapCtx.beginPath();
-                navigationMapCtx.moveTo(0, i * (size / 10));
-                navigationMapCtx.lineTo(size, i * (size / 10));
-                navigationMapCtx.stroke();
-            }
-
-            // Draw airports
-            airports.forEach(airport => {
-                const x = center.x + (airport.position.x / TERRAIN_SIZE) * size * 0.8;
-                const y = center.y + (airport.position.z / TERRAIN_SIZE) * size * 0.8;
-
-                navigationMapCtx.fillStyle = '#17b978';
-                navigationMapCtx.beginPath();
-                navigationMapCtx.arc(x, y, 8, 0, Math.PI * 2);
-                navigationMapCtx.fill();
-
-                navigationMapCtx.strokeStyle = '#ffffff';
-                navigationMapCtx.lineWidth = 2;
-                navigationMapCtx.beginPath();
-                navigationMapCtx.moveTo(x - 15, y);
-                navigationMapCtx.lineTo(x + 15, y);
-                navigationMapCtx.moveTo(x, y - 15);
-                navigationMapCtx.lineTo(x, y + 15);
-                navigationMapCtx.stroke();
-
-                // Label
-                navigationMapCtx.fillStyle = '#ffffff';
-                navigationMapCtx.font = 'bold 10px Arial';
-                navigationMapCtx.textAlign = 'center';
-                navigationMapCtx.fillText('AIRPORT', x, y - 20);
-            });
-
-            // Draw aircraft position
-            const aircraftX = center.x + (aircraftGroup.position.x / TERRAIN_SIZE) * size * 0.8;
-            const aircraftY = center.y + (aircraftGroup.position.z / TERRAIN_SIZE) * size * 0.8;
-
-            // Aircraft symbol (triangle pointing in direction of travel)
-            const angle = -aircraftGroup.rotation.y;
-            const tipX = aircraftX + Math.cos(angle) * 10;
-            const tipY = aircraftY + Math.sin(angle) * 10;
-            const leftX = aircraftX + Math.cos(angle + Math.PI * 0.8) * 6;
-            const leftY = aircraftY + Math.sin(angle + Math.PI * 0.8) * 6;
-            const rightX = aircraftX + Math.cos(angle - Math.PI * 0.8) * 6;
-            const rightY = aircraftY + Math.sin(angle - Math.PI * 0.8) * 6;
-
-            navigationMapCtx.fillStyle = '#ff0000';
-            navigationMapCtx.beginPath();
-            navigationMapCtx.moveTo(tipX, tipY);
-            navigationMapCtx.lineTo(leftX, leftY);
-            navigationMapCtx.lineTo(rightX, rightY);
-            navigationMapCtx.closePath();
-            navigationMapCtx.fill();
-
-            // Label
-            navigationMapCtx.fillStyle = '#ffffff';
-            navigationMapCtx.font = 'bold 10px Arial';
-            navigationMapCtx.textAlign = 'center';
-            navigationMapCtx.fillText('YOU', aircraftX, aircraftY - 15);
-
-            // Draw NPC planes
-            npcPlanes.forEach(npc => {
-                const npcX = center.x + (npc.mesh.position.x / TERRAIN_SIZE) * size * 0.8;
-                const npcY = center.y + (npc.mesh.position.z / TERRAIN_SIZE) * size * 0.8;
-
-                navigationMapCtx.fillStyle = npc.isMilitary ? '#ff0000' : '#00ff00';
-                navigationMapCtx.beginPath();
-                navigationMapCtx.arc(npcX, npcY, 3, 0, Math.PI * 2);
-                navigationMapCtx.fill();
-            });
-
-            // Draw compass rose
-            navigationMapCtx.strokeStyle = '#17b978';
-            navigationMapCtx.lineWidth = 1;
-            navigationMapCtx.beginPath();
-            navigationMapCtx.arc(center.x, center.y, 10, 0, Math.PI * 2);
-            navigationMapCtx.stroke();
-
-            // North marker
-            navigationMapCtx.fillStyle = '#ffffff';
-            navigationMapCtx.font = 'bold 12px Arial';
-            navigationMapCtx.textAlign = 'center';
-            navigationMapCtx.fillText('N', center.x, center.y - 15);
-        }
-
-        // --- FAULTS SYSTEM ---
-        function addFault(name, message) {
-            // Check if fault already exists
-            const existingFault = activeFaults.find(f => f.name === name);
-            if (existingFault) return;
-
-            activeFaults.push({ name, message });
-
-            // Update display
-            updateFaultsDisplay();
-
-            // Play warning sound
-            soundManager.play('warning');
-        }
-
-        function removeFault(name) {
-            activeFaults = activeFaults.filter(f => f.name !== name);
-            updateFaultsDisplay();
-
-            if (activeFaults.length === 0) {
-                soundManager.stop('warning');
-            }
-        }
-
-        function updateFaultsDisplay() {
-            const faultsList = document.getElementById('faults-list');
-            faultsList.innerHTML = '';
-
-            activeFaults.forEach(fault => {
-                const faultElement = document.createElement('div');
-                faultElement.style.color = '#ff0000';
-                faultElement.style.marginBottom = '5px';
-                faultElement.innerHTML = `<strong>${fault.name}:</strong> ${fault.message}`;
-                faultsList.appendChild(faultElement);
-            });
-
-            if (activeFaults.length > 0) {
-                document.getElementById('faults-display').style.display = 'block';
-            } else {
-                document.getElementById('faults-display').style.display = 'none';
-            }
-        }
-
-        // --- NPC PLANES ---
-        function spawnNPCPlanes() {
-            // Clear existing NPC planes
-            cleanupNPCPlanes();
-
-            // Spawn new NPC planes
-            for (let i = 0; i < MAX_NPC_PLANES; i++) {
-                if (Math.random() > 0.7) continue; // 70% chance to spawn
-
-                const npcTypeKeys = Object.keys(fleetProfiles).filter(key => key !== selectedType);
-                const npcType = npcTypeKeys[Math.floor(Math.random() * npcTypeKeys.length)];
-                const npcProfile = fleetProfiles[npcType];
-
-                const npcGroup = new THREE.Group();
-
-                // Create a simplified model for NPC
-                const bodyGeometry = new THREE.BoxGeometry(2, 0.5, 4);
-                const bodyMaterial = new THREE.MeshStandardMaterial({
-                    color: npcProfile.isMilitary ? 0x555555 : 0xffffff,
-                    roughness: 0.5
-                });
-                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-                npcGroup.add(body);
-
-                // Wings
-                const wingGeometry = new THREE.BoxGeometry(3, 0.1, 1);
-                const wingL = new THREE.Mesh(wingGeometry, bodyMaterial);
-                wingL.position.set(-1.5, 0, 0);
-                wingL.rotation.y = 0.2;
-                npcGroup.add(wingL);
-
-                const wingR = wingL.clone();
-                wingR.position.x = 1.5;
-                wingR.rotation.y = -0.2;
-                npcGroup.add(wingR);
-
-                // Tail
-                const tailGeometry = new THREE.BoxGeometry(0.5, 0.8, 0.5);
-                const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
-                tail.position.set(0, 0, 2);
-                npcGroup.add(tail);
-
-                // Position randomly
-                const angle = Math.random() * Math.PI * 2;
-                const distance = 2000 + Math.random() * 5000;
-                const x = aircraftGroup.position.x + Math.cos(angle) * distance;
-                const z = aircraftGroup.position.z + Math.sin(angle) * distance;
-                const y = lookupHeight(x, z) + 200 + Math.random() * 500;
-
-                npcGroup.position.set(x, y, z);
-
-                // Random heading
-                npcGroup.rotation.y = Math.random() * Math.PI * 2;
-
-                // Add to scene
-                scene.add(npcGroup);
-
-                // Add to NPC planes array
-                npcPlanes.push({
-                    mesh: npcGroup,
-                    profile: npcProfile,
-                    targetPosition: null,
-                    speed: npcProfile.speed * (0.5 + Math.random() * 0.5),
-                    health: 100,
-                    isMilitary: npcProfile.isMilitary,
-                    state: 'cruising' // cruising, taking off, landing, attacking
-                });
-            }
-        }
-
-        function updateNPCPlanes(deltaTime) {
-            for (let i = npcPlanes.length - 1; i >= 0; i--) {
-                const npc = npcPlanes[i];
-
-                // Simple AI: fly in a random direction, occasionally change direction
-                if (!npc.targetPosition || npc.mesh.position.distanceTo(npc.targetPosition) < 100) {
-                    // Get new target
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = 500 + Math.random() * 2000;
-                    npc.targetPosition = new THREE.Vector3(
-                        npc.mesh.position.x + Math.cos(angle) * distance,
-                        npc.mesh.position.y + (Math.random() - 0.5) * 200,
-                        npc.mesh.position.z + Math.sin(angle) * distance
-                    );
-                }
-
-                // Move towards target
-                const direction = npc.targetPosition.clone().sub(npc.mesh.position).normalize();
-                npc.mesh.position.addScaledVector(direction, npc.speed * deltaTime * 60);
-
-                // Rotate to face direction
-                npc.mesh.lookAt(npc.targetPosition);
-
-                // Add some vertical oscillation
-                npc.mesh.position.y += Math.sin(Date.now() * 0.001 + i) * 0.1;
-
-                // Check if out of bounds
-                const distanceFromPlayer = npc.mesh.position.distanceTo(aircraftGroup.position);
-                if (distanceFromPlayer > 10000) {
-                    // Too far away, remove
-                    scene.remove(npc.mesh);
-                    npcPlanes.splice(i, 1);
-                }
-
-                // Check for collisions with terrain
-                const groundHeight = lookupHeight(npc.mesh.position.x, npc.mesh.position.z);
-                if (npc.mesh.position.y <= groundHeight + 5) {
-                    npc.mesh.position.y = groundHeight + 5;
-                    // Change direction to avoid terrain
-                    npc.targetPosition = new THREE.Vector3(
-                        npc.mesh.position.x + (Math.random() - 0.5) * 1000,
-                        npc.mesh.position.y + 200,
-                        npc.mesh.position.z + (Math.random() - 0.5) * 1000
-                    );
-                }
-            }
-
-            // Occasionally spawn new NPC planes
-            if (Math.random() < 0.005 && npcPlanes.length < MAX_NPC_PLANES) {
-                spawnNPCPlanes();
-            }
-        }
-
-        function cleanupNPCPlanes() {
-            npcPlanes.forEach(npc => {
-                scene.remove(npc.mesh);
-            });
-            npcPlanes = [];
-        }
-
-        // --- SOUND TOGGLE ---
-        function toggleSound() {
-            soundManager.toggle();
-        }
-
-        function setVolume(volume) {
-            soundManager.setVolume(volume);
-        }
-
-        // --- LOADING SCREEN ---
-        function simulateLoading() {
-            const loadingProgress = document.getElementById('loading-progress');
-            let progress = 0;
-
-            const interval = setInterval(() => {
-                progress += Math.random() * 10;
-                if (progress >= 100) {
-                    progress = 100;
-                    loadingProgress.style.width = progress + '%';
-                    document.getElementById('loading-screen').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('loading-screen').style.display = 'none';
-                        clearInterval(interval);
-
-                        // Initialize the game
-                        generateTerrain();
-
-                        // Set up initial view
-                        document.getElementById('entry-screen').style.display = 'flex';
-                        document.getElementById('sound-controls').style.display = 'block';
-
-                        // Start with first aircraft selected
-                        selectHangarPlane('f22', document.querySelector('.card-option'));
-
-                        // Start rendering
-                        requestAnimationFrame(runSimulationLoops);
-                    }, 500);
-                } else {
-                    loadingProgress.style.width = progress + '%';
-                }
-            }, 100);
-        }
-
-        // --- INITIALIZE ---
-        // Start loading
-        simulateLoading();
-
-        // Handle window resize
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-
-            cockpitCamera.aspect = window.innerWidth / window.innerHeight;
-            cockpitCamera.updateProjectionMatrix();
-
-            chaseCamera.aspect = window.innerWidth / window.innerHeight;
-            chaseCamera.updateProjectionMatrix();
-
-            externalCamera.aspect = window.innerWidth / window.innerHeight;
-            externalCamera.updateProjectionMatrix();
-
-            topdownCamera.aspect = window.innerWidth / window.innerHeight;
-            topdownCamera.updateProjectionMatrix();
-
-            firstPersonCamera.aspect = window.innerWidth / window.innerHeight;
-            firstPersonCamera.updateProjectionMatrix();
-
-            gunnerCamera.aspect = window.innerWidth / window.innerHeight;
-            gunnerCamera.updateProjectionMatrix();
-
-            if (walkCamera) {
-                walkCamera.aspect = window.innerWidth / window.innerHeight;
-                walkCamera.updateProjectionMatrix();
-            }
-
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-
-            // Redraw compass and navigation map
-            if (compassCtx) drawCompass();
-            if (navigationMapCtx) drawNavigationMap();
         });
 
-        // Add data attributes to camera view buttons for easier selection
-        document.addEventListener('DOMContentLoaded', () => {
-            const cameraButtons = document.querySelectorAll('.color-btn');
-            cameraButtons.forEach((button, index) => {
-                const views = ['cockpit', 'chase', 'external', 'topdown', 'firstperson', 'gunner'];
-                if (index < views.length) {
-                    button.setAttribute('data-view', views[index]);
-                }
-            });
-        });
+        renderEngineLoop();
     </script>
 </body>
-</html>
+</html> 
