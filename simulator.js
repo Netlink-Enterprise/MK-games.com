@@ -4,6 +4,8 @@ let currentUsername = 'GUEST';
 let isAdmin = false;
 let botDifficulty = 'none';
 let players = [];
+let chatOpen = false;
+let chatMessages = [];
 
 // --- GLOBAL SYSTEM AND CUSTOM DECK TRACKING CONTROLS ---
 let flightActive = false;
@@ -28,6 +30,11 @@ let propEngineBlades = [];
 // Track previous values for gauges
 let prevAltitude = 0;
 let prevSpeed = 0;
+
+// Crash animation state
+let isCrashing = false;
+let crashProgress = 0;
+let crashExplosions = [];
 
 // --- GRAPHICS ENVIRONMENT SETUP ---
 const scene = new THREE.Scene();
@@ -192,6 +199,62 @@ function setBotDifficulty(id, desc, element) {
     updatePlayerList();
 }
 
+// Chat functions
+function toggleChat() {
+    const chat = document.getElementById('chat-container');
+    chatOpen = !chatOpen;
+    chat.style.display = chatOpen ? 'flex' : 'none';
+    if (chatOpen && flightActive) {
+        document.getElementById('chat-input').focus();
+    }
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (message) {
+        addChatMessage(currentUsername, message);
+        input.value = '';
+        
+        // Simulate bot responses
+        if (gameMode === 'multiplayer' && botDifficulty !== 'none') {
+            setTimeout(() => {
+                const botNames = ['BOT-1', 'BOT-2', 'BOT-3', 'BOT-4', 'BOT-5', 'BOT-6'];
+                const responses = [
+                    'Roger that!',
+                    'Copy!',
+                    'Understood!',
+                    'Affirmative!',
+                    'Negative!',
+                    'Wilco!',
+                    'Good flying!',
+                    'Watch your six!',
+                    'Clear skies!',
+                    'On your wing!'
+                ];
+                const randomBot = botNames[Math.floor(Math.random() * botNames.length)];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                addChatMessage(randomBot, randomResponse);
+            }, 1000 + Math.random() * 2000);
+        }
+    }
+}
+
+function addChatMessage(username, message) {
+    const chatMessages = document.getElementById('chat-messages');
+    const timestamp = new Date().toLocaleTimeString();
+    chatMessages.innerHTML += `
+        <div class="chat-message">
+            <span class="chat-username">[${timestamp}] ${username}:</span> 
+            <span class="chat-text">${message}</span>
+        </div>
+    `;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Store message
+    chatMessages.push({ username, message, time: Date.now() });
+}
+
 function engageFlight() {
     document.getElementById('entry-screen').style.opacity = '0';
     document.getElementById('how-to-play').style.display = 'none';
@@ -206,16 +269,32 @@ function engageFlight() {
         cameraOrbitTheta = 0; 
         cameraOrbitPhi = 0.2; 
         isMouseDragging = false;
-        aircraftGroup.position.set(0, 350, 0); 
-        aircraftGroup.rotation.set(0,0,0);
+        isCrashing = false;
+        crashProgress = 0;
+        
+        // Clear crash animations
+        crashExplosions.forEach(explosion => {
+            if (explosion.mesh) scene.remove(explosion.mesh);
+        });
+        crashExplosions = [];
         
         // Reset gauge values
         prevAltitude = 0;
         prevSpeed = 0;
         
+        // Position aircraft
+        aircraftGroup.position.set(0, 350, 0); 
+        aircraftGroup.rotation.set(0,0,0);
+        
         // Spawn bots if in multiplayer with bots enabled
         if (gameMode === 'multiplayer' && botDifficulty !== 'none') {
             spawnBots();
+            document.getElementById('chat-container').style.display = 'flex';
+            chatOpen = true;
+            addChatMessage('SYSTEM', `${currentUsername} has entered the game!`);
+        } else {
+            document.getElementById('chat-container').style.display = 'none';
+            chatOpen = false;
         }
         
         manufactureAircraft();
@@ -229,20 +308,27 @@ function spawnBots() {
         if (bot.group) {
             scene.remove(bot.group);
         }
+        if (bot.label) {
+            scene.remove(bot.label);
+        }
     });
     botAircraft.length = 0;
     
     const botCount = botDifficulty === 'easy' ? 2 : botDifficulty === 'medium' ? 4 : 6;
     
     for (let i = 0; i < botCount; i++) {
+        // Select a random aircraft for the bot
         const botTypes = Object.keys(fleetProfiles);
         const randomType = botTypes[Math.floor(Math.random() * botTypes.length)];
         const botProfile = fleetProfiles[randomType];
         
+        // Create bot aircraft
         const botGroup = new THREE.Group();
         
+        // Simple bot aircraft model with distinct color
+        const botColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
         const botSkin = new THREE.MeshStandardMaterial({ 
-            color: 0xff0000, 
+            color: botColors[i % botColors.length], 
             roughness: 0.38, 
             metalness: 0.45 
         });
@@ -253,25 +339,60 @@ function spawnBots() {
         const botWingR = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.05, 1.5), botSkin);
         botWingR.position.set(1.5, 0, 0);
         
-        botGroup.add(botFuselage, botWingL, botWingR);
+        // Tail
+        const botTail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.6), botSkin);
+        botTail.position.set(0, 0.4, 2.0);
         
+        botGroup.add(botFuselage, botWingL, botWingR, botTail);
+        
+        // Position bot randomly around the player
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 300 + Math.random() * 200;
         botGroup.position.set(
-            (Math.random() - 0.5) * 500,
+            Math.cos(angle) * distance,
             200 + Math.random() * 100,
-            (Math.random() - 0.5) * 500
+            Math.sin(angle) * distance
         );
         
+        // Create name label for bot
+        const labelCanvas = document.createElement('canvas');
+        labelCanvas.width = 256;
+        labelCanvas.height = 64;
+        const labelContext = labelCanvas.getContext('2d');
+        labelContext.fillStyle = 'rgba(0,0,0,0.7)';
+        labelContext.fillRect(0, 0, 256, 64);
+        labelContext.font = 'Bold 14px Arial';
+        labelContext.fillStyle = '#00ff66';
+        labelContext.fillText(`BOT-${i+1}`, 10, 20);
+        labelContext.font = '12px Arial';
+        labelContext.fillStyle = '#ffffff';
+        labelContext.fillText(botProfile.name, 10, 40);
+        
+        const labelTexture = new THREE.CanvasTexture(labelCanvas);
+        const labelMaterial = new THREE.SpriteMaterial({ map: labelTexture, transparent: true });
+        const labelSprite = new THREE.Sprite(labelMaterial);
+        labelSprite.position.set(0, 0, 0);
+        labelSprite.scale.set(20, 5, 1);
+        
         scene.add(botGroup);
+        scene.add(labelSprite);
         
         botAircraft.push({
             group: botGroup,
+            label: labelSprite,
             profile: botProfile,
-            speed: botProfile.speed * 0.8,
+            speed: botProfile.speed * 0.8 + Math.random() * 0.2,
             direction: new THREE.Vector3(
                 Math.random() - 0.5,
                 0,
                 Math.random() - 0.5
-            ).normalize()
+            ).normalize(),
+            targetDirection: new THREE.Vector3(
+                Math.random() - 0.5,
+                0,
+                Math.random() - 0.5
+            ).normalize(),
+            changeDirectionTimer: Math.random() * 5000 + 3000
         });
     }
 }
@@ -279,52 +400,194 @@ function spawnBots() {
 function updateBots() {
     if (!flightActive) return;
     
+    const currentTime = Date.now();
+    
     botAircraft.forEach(bot => {
+        // Move bot in its direction
         bot.group.position.add(bot.direction.clone().multiplyScalar(bot.speed * 0.1));
+        bot.label.position.copy(bot.group.position);
+        bot.label.position.y += 15;
         
-        if (Math.random() < 0.01) {
-            bot.direction = new THREE.Vector3(
+        // Update direction timer
+        bot.changeDirectionTimer -= 16; // ~60fps
+        if (bot.changeDirectionTimer <= 0) {
+            // Change direction towards a new random target
+            bot.targetDirection = new THREE.Vector3(
                 Math.random() - 0.5,
                 0,
                 Math.random() - 0.5
             ).normalize();
+            bot.changeDirectionTimer = Math.random() * 5000 + 3000;
         }
         
+        // Smoothly turn towards target direction
+        bot.direction.lerp(bot.targetDirection, 0.01);
+        
+        // Keep bot within bounds
         if (bot.group.position.y < 50) {
             bot.group.position.y = 50;
-            bot.direction.y = Math.abs(bot.direction.y);
+            bot.direction.y = Math.abs(bot.direction.y) * 0.5;
         }
         
+        // Keep bot within reasonable distance from origin
+        const distanceFromOrigin = bot.group.position.length();
+        if (distanceFromOrigin > 2000) {
+            bot.direction = bot.group.position.clone().negate().normalize();
+            bot.direction.y = 0;
+        }
+        
+        // Simple rotation to face direction
         bot.group.lookAt(bot.group.position.clone().add(bot.direction.clone().multiplyScalar(10)));
+        
+        // Occasionally fire (if military)
+        if (bot.profile.isMilitary && Math.random() < 0.002) {
+            // Create a small laser effect
+            const laserGeo = new THREE.CylinderGeometry(0.03, 0.03, 2.0); 
+            laserGeo.rotateX(Math.PI/2);
+            const laserMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const laser = new THREE.Mesh(laserGeo, laserMat);
+            laser.position.copy(bot.group.position);
+            laser.position.x -= 0.5;
+            laser.position.y -= 0.1;
+            laser.rotation.copy(bot.group.rotation);
+            laser.translateZ(-2);
+            
+            scene.add(laser);
+            
+            // Remove laser after short time
+            setTimeout(() => {
+                scene.remove(laser);
+            }, 500);
+        }
     });
 }
 
 function forceCrashState() {
     flightActive = false; 
     isMouseDragging = false;
-    document.getElementById('hud-container').style.display = 'none';
-    document.getElementById('death-screen').style.display = 'flex';
+    isCrashing = true;
+    crashProgress = 0;
     
+    // Trigger crash animation
+    triggerCrashAnimation();
+    
+    // Hide HUD temporarily
+    document.getElementById('hud-container').style.display = 'none';
+    
+    // Clean up bots
     botAircraft.forEach(bot => {
         if (bot.group) {
             scene.remove(bot.group);
         }
+        if (bot.label) {
+            scene.remove(bot.label);
+        }
     });
     botAircraft.length = 0;
+    
+    // Show death screen after animation
+    setTimeout(() => {
+        document.getElementById('death-screen').style.display = 'flex';
+        isCrashing = false;
+    }, 3000);
+}
+
+function triggerCrashAnimation() {
+    const crashAnimation = document.getElementById('crash-animation');
+    const crashEffect = document.getElementById('crash-effect');
+    
+    crashAnimation.style.display = 'block';
+    crashEffect.innerHTML = '';
+    
+    // Create multiple explosions
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = `${50 + (Math.random() - 0.5) * 40}%`;
+            explosion.style.top = `${50 + (Math.random() - 0.5) * 40}%`;
+            explosion.style.background = `radial-gradient(circle, rgba(${Math.floor(Math.random() * 255)},${Math.floor(Math.random() * 100)},0,0.8) 0%, rgba(0,0,0,0) 70%)`;
+            crashEffect.appendChild(explosion);
+            
+            // Create 3D explosion effect
+            const explosionGeo = new THREE.SphereGeometry(5 + Math.random() * 10, 16, 16);
+            const explosionMat = new THREE.MeshBasicMaterial({ 
+                color: new THREE.Color(Math.random(), Math.random() * 0.5, 0), 
+                transparent: true, 
+                opacity: 0.8
+            });
+            const explosionMesh = new THREE.Mesh(explosionGeo, explosionMat);
+            explosionMesh.position.copy(aircraftGroup.position);
+            explosionMesh.position.x += (Math.random() - 0.5) * 20;
+            explosionMesh.position.y += (Math.random() - 0.5) * 20;
+            explosionMesh.position.z += (Math.random() - 0.5) * 20;
+            scene.add(explosionMesh);
+            
+            crashExplosions.push({
+                mesh: explosionMesh,
+                life: 60
+            });
+            
+            // Remove explosion after animation
+            setTimeout(() => {
+                crashEffect.removeChild(explosion);
+            }, 1000);
+        }, i * 200);
+    }
+    
+    // Hide aircraft
+    aircraftGroup.visible = false;
+    
+    // Shake camera effect
+    const originalCameraPosition = camera.position.clone();
+    let shakeIntensity = 20;
+    
+    function shakeCamera() {
+        if (isCrashing && crashProgress < 100) {
+            camera.position.x = originalCameraPosition.x + (Math.random() - 0.5) * shakeIntensity;
+            camera.position.y = originalCameraPosition.y + (Math.random() - 0.5) * shakeIntensity;
+            camera.position.z = originalCameraPosition.z + (Math.random() - 0.5) * shakeIntensity;
+            
+            shakeIntensity *= 0.95;
+            crashProgress += 1;
+            
+            requestAnimationFrame(shakeCamera);
+        } else {
+            camera.position.copy(originalCameraPosition);
+        }
+    }
+    
+    shakeCamera();
 }
 
 function returnToHangar() {
     document.getElementById('death-screen').style.display = 'none';
+    document.getElementById('crash-animation').style.display = 'none';
     document.getElementById('entry-screen').style.display = 'flex'; 
     document.getElementById('entry-screen').style.opacity = '1';
     document.getElementById('how-to-play').style.display = 'none';
+    document.getElementById('chat-container').style.display = 'none';
+    chatOpen = false;
     
+    // Clean up bots
     botAircraft.forEach(bot => {
         if (bot.group) {
             scene.remove(bot.group);
         }
+        if (bot.label) {
+            scene.remove(bot.label);
+        }
     });
     botAircraft.length = 0;
+    
+    // Clean up crash effects
+    crashExplosions.forEach(explosion => {
+        if (explosion.mesh) scene.remove(explosion.mesh);
+    });
+    crashExplosions = [];
+    
+    // Show aircraft again
+    aircraftGroup.visible = true;
     
     manufactureAircraft();
 }
@@ -374,6 +637,8 @@ function selectSinglePlayer() {
     document.getElementById('entry-screen').style.opacity = '1';
     document.getElementById('multiplayer-ui').style.display = 'none';
     document.getElementById('player-list').style.display = 'none';
+    document.getElementById('chat-container').style.display = 'none';
+    chatOpen = false;
 }
 
 function selectMultiPlayer() {
@@ -384,6 +649,8 @@ function selectMultiPlayer() {
     document.getElementById('entry-screen').style.opacity = '1';
     document.getElementById('multiplayer-ui').style.display = 'flex';
     document.getElementById('player-list').style.display = 'block';
+    document.getElementById('chat-container').style.display = 'none';
+    chatOpen = false;
     updatePlayerList();
 }
 
@@ -412,6 +679,8 @@ function checkAdminPassword() {
         document.getElementById('entry-screen').style.opacity = '1';
         document.getElementById('multiplayer-ui').style.display = 'flex';
         document.getElementById('player-list').style.display = 'block';
+        document.getElementById('chat-container').style.display = 'none';
+        chatOpen = false;
         updatePlayerList();
     } else {
         document.getElementById('login-error').innerText = 'Incorrect password!';
@@ -494,15 +763,29 @@ function fireLaserCannon() {
 window.onkeydown = (e) => {
     const key = e.key.toLowerCase(); 
     inputState[key] = true;
-    if (key === 'r' && !flightActive && integrity <= 0) returnToHangar();
+    
+    if (key === 'r' && !flightActive && !isCrashing) {
+        returnToHangar();
+    }
+    
+    if (key === 't' && flightActive) {
+        toggleChat();
+        e.preventDefault();
+    }
+    
+    if (key === 'enter' && chatOpen && flightActive) {
+        sendChatMessage();
+        e.preventDefault();
+    }
 };
+
 window.onkeyup = (e) => { 
     inputState[e.key.toLowerCase()] = false; 
 };
 
 // --- RUNTIME SIMULATION LOOPS ---
 function runSimulationLoops() {
-    if (!flightActive) return;
+    if (!flightActive || isCrashing) return;
 
     let rollingSpeedModifier = activeProfile.rollRate * (1.3 - (customWingspanScale * 0.25));
 
@@ -563,6 +846,19 @@ function runSimulationLoops() {
         }
     }
 
+    // Update crash explosions
+    for (let i = crashExplosions.length - 1; i >= 0; i--) {
+        crashExplosions[i].life--;
+        if (crashExplosions[i].life <= 0) {
+            scene.remove(crashExplosions[i].mesh);
+            crashExplosions.splice(i, 1);
+        } else {
+            // Fade out explosion
+            crashExplosions[i].mesh.material.opacity = crashExplosions[i].life / 60;
+            crashExplosions[i].mesh.scale.multiplyScalar(1.02);
+        }
+    }
+
     updateBots();
 
     let px = aircraftGroup.position.x;
@@ -602,6 +898,7 @@ function runSimulationLoops() {
         }
     }
 
+    // Atmosphere Cycles
     clockTime += 0.00005;
     let cycleVal = (Math.sin(clockTime * Math.PI * 2) + 1) / 2;
     scene.background.setHSL(0.58, 0.5, cycleVal * 0.4 + 0.1);
@@ -659,7 +956,7 @@ function updateDashboard(altitude, speedVal) {
 }
 
 function trackCameraSpring() {
-    if (!flightActive) return;
+    if (!flightActive || isCrashing) return;
 
     if (!isMouseDragging) {
         cameraOrbitTheta = THREE.MathUtils.lerp(cameraOrbitTheta, 0, 0.08);
@@ -698,6 +995,5 @@ window.addEventListener('resize', () => {
 manufactureAircraft();
 
 // Start with welcome screen
-// Don't auto-select any mode - let user choose
 
 renderEngineLoop();
