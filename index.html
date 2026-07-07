@@ -261,55 +261,212 @@
             pointer-events: none; 
             display: none; 
         }
-        #mfd-dashboard {
-            position: absolute; 
-            bottom: 20px; 
-            left: 50%; 
+        
+        /* Enhanced Dashboard */
+        #dashboard-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
             transform: translateX(-50%);
-            background: rgba(2, 5, 12, 0.97); 
-            border: 2px solid #1a365d;
-            border-radius: 8px; 
-            width: 780px; 
-            padding: 14px; 
+            width: 900px;
             display: flex;
-            justify-content: space-between; 
-            color: #00ff66; 
-            font-family: monospace;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        
+        #main-dashboard {
+            background: rgba(2, 5, 12, 0.97);
+            border: 2px solid #1a365d;
+            border-radius: 8px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
             box-shadow: 0 5px 25px rgba(0,0,0,0.9);
         }
-        .mfd-screen { 
-            border: 1px solid #10223b; 
-            background: rgba(0,0,0,0.7); 
-            padding: 10px 15px; 
-            border-radius: 4px; 
-            flex: 1; 
-            margin: 0 6px; 
+        
+        .dashboard-panel {
+            border: 1px solid #10223b;
+            background: rgba(0,0,0,0.7);
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+            color: #00ff66;
+            font-family: monospace;
         }
-        .mfd-title { 
-            font-size: 0.8em; 
-            color: #ffd700; 
-            border-bottom: 1px solid #10223b; 
-            padding-bottom: 4px; 
-            margin-bottom: 6px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
+        
+        .dashboard-title {
+            font-size: 0.7em;
+            color: #ffd700;
+            border-bottom: 1px solid #10223b;
+            padding-bottom: 3px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .mfd-data { 
-            font-size: 1.25em; 
-            font-weight: bold; 
-            color: #fff; 
-            margin: 4px 0; 
+        
+        .dashboard-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #fff;
         }
-        .mfd-data span { 
-            color: #00ff66; 
+        
+        .dashboard-value span {
+            color: #00ff66;
         }
-
+        
+        .dashboard-value.warning {
+            color: #ffaa00;
+        }
+        
+        .dashboard-value.danger {
+            color: #ff3333;
+        }
+        
+        /* Attitude Indicator */
+        #attitude-indicator {
+            grid-column: span 2;
+            position: relative;
+            height: 120px;
+            background: radial-gradient(circle at center, #0a1520 0%, #020710 100%);
+            border: 2px solid #17b978;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        
+        #attitude-horizon {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff66, transparent);
+            transform: translateY(-50%);
+        }
+        
+        #attitude-pitch {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 60px;
+            background: #ffd700;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* Compass */
+        #compass {
+            grid-column: span 2;
+            position: relative;
+            height: 120px;
+            background: #050d1a;
+            border: 2px solid #1a365d;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        
+        #compass-rose {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, #0a1520 0%, #020710 100%);
+            border: 1px solid #10223b;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.6em;
+            color: #00ff66;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #compass-needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40%;
+            height: 2px;
+            background: #ffd700;
+            transform-origin: center;
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+        
+        /* How to Play Panel */
+        #how-to-play {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 280px;
+            background: rgba(6, 13, 26, 0.96);
+            border: 2px solid #1a365d;
+            border-radius: 8px;
+            padding: 15px;
+            color: #fff;
+            font-size: 0.85em;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+            display: none;
+            pointer-events: auto;
+        }
+        
+        #how-to-play h3 {
+            margin: 0 0 10px 0;
+            color: #ffd700;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #10223b;
+            padding-bottom: 5px;
+        }
+        
+        #how-to-play .control-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 3px 0;
+        }
+        
+        #how-to-play .control-item span:first-child {
+            color: #8b9bb4;
+        }
+        
+        #how-to-play .control-item span:last-child {
+            color: #00ff66;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        #how-to-play-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(2, 5, 12, 0.9);
+            border: 1px solid #1a365d;
+            color: #00ff66;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.8em;
+            z-index: 101;
+            pointer-events: auto;
+            transition: all 0.2s;
+        }
+        
+        #how-to-play-toggle:hover {
+            background: rgba(6, 13, 26, 0.96);
+            border-color: #17b978;
+        }
+        
         #top-info { 
             position: absolute; 
             top: 20px; 
             left: 20px; 
             color: white; 
             text-shadow: 2px 2px 4px #000; 
+            pointer-events: none;
         }
         #weapon-indicator { 
             font-weight: bold; 
@@ -334,10 +491,113 @@
             font-size: 0.9em; 
             text-align: right; 
             text-shadow: 1px 1px 2px #000; 
+            pointer-events: none;
+        }
+        
+        /* Altimeter and Speed Gauges */
+        .gauge-container {
+            grid-column: span 1;
+            position: relative;
+            height: 120px;
+            width: 100%;
+        }
+        
+        .gauge {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #050d1a;
+            border: 2px solid #1a365d;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        
+        .gauge-arc {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 80%;
+            border: 2px solid #10223b;
+            border-radius: 50%;
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+        }
+        
+        .gauge-needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 40%;
+            background: #ffd700;
+            transform-origin: center bottom;
+            transform: translateX(-50%) rotate(0deg);
+        }
+        
+        .gauge-label {
+            position: absolute;
+            bottom: 5%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #00ff66;
+            font-size: 0.7em;
+            font-family: monospace;
+        }
+        
+        .gauge-value {
+            position: absolute;
+            top: 25%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-size: 1.2em;
+            font-weight: bold;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
+
+    <!-- How to Play Toggle Button -->
+    <div id="how-to-play-toggle" onclick="toggleHowToPlay()">HOW TO PLAY</div>
+    
+    <!-- How to Play Panel -->
+    <div id="how-to-play">
+        <h3>CONTROLS</h3>
+        <div class="control-item">
+            <span>Pitch Up/Down</span>
+            <span>W / S</span>
+        </div>
+        <div class="control-item">
+            <span>Roll Left/Right</span>
+            <span>A / D</span>
+        </div>
+        <div class="control-item">
+            <span>Yaw Left/Right</span>
+            <span>Q / E</span>
+        </div>
+        <div class="control-item">
+            <span>Throttle Up</span>
+            <span>SPACE</span>
+        </div>
+        <div class="control-item">
+            <span>Fire Weapon</span>
+            <span>G</span>
+        </div>
+        <div class="control-item">
+            <span>Mouse Drag</span>
+            <span>ORBIT CAMERA</span>
+        </div>
+        <div class="control-item">
+            <span>Return to Hangar</span>
+            <span>R (after crash)</span>
+        </div>
+    </div>
 
     <!-- 1. ENTRY HANGAR WITH REAL-TIME CUSTOMIZATION DECK -->
     <div id="entry-screen" class="overlay-screen">
@@ -401,30 +661,89 @@
             <div style="font-size: 0.8em; letter-spacing: 3px; color: #ffd700; font-weight: bold;">CHIEF COMMAND PILOT: MANAV BISHT</div>
             <div id="active-plane-title" style="font-size: 1.6em; font-weight: bold; text-transform: uppercase;">F-22 Raptor</div>
         </div>
-        <div id="pov-indicator">POV CAMERA: <span id="pov-state" style="font-weight:bold;">AUTO-TRACK</span><br><span style="font-size:0.8em; color:#8b9bb4;">Click + Drag Mouse to Orbit</span></div>
-
-        <div id="mfd-dashboard">
-            <div class="mfd-screen">
-                <div class="mfd-title">Primary Flight Display</div>
-                <div class="mfd-data">ALT: <span id="dash-alt">0</span><small> ft</small></div>
-                <div class="mfd-data">SPD: <span id="dash-spd">0</span><small> mph</small></div>
-            </div>
-            <div class="mfd-screen">
-                <div class="mfd-title">Weapons & Gear Systems</div>
-                <div class="mfd-data">GEAR: <span id="dash-gear">DOWN</span></div>
-                <div class="mfd-data">WEAPON: <span id="weapon-indicator">NONE</span></div>
-            </div>
-            <div class="mfd-screen">
-                <div class="mfd-title">System Mechanics</div>
-                <div class="mfd-data">INTEG: <span id="dash-hull" style="color:#00ff66;">100%</span></div>
-                <div class="mfd-data">CLOCK: <span id="dash-time">12:00</span></div>
+        
+        <!-- Enhanced Dashboard -->
+        <div id="dashboard-container">
+            <div id="main-dashboard">
+                <!-- Altimeter -->
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-arc"></div>
+                        <div class="gauge-needle" id="alt-needle"></div>
+                        <div class="gauge-label">ALTITUDE</div>
+                        <div class="gauge-value" id="alt-value">0</div>
+                    </div>
+                </div>
+                
+                <!-- Speed -->
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-arc"></div>
+                        <div class="gauge-needle" id="speed-needle"></div>
+                        <div class="gauge-label">SPEED</div>
+                        <div class="gauge-value" id="speed-value">0</div>
+                    </div>
+                </div>
+                
+                <!-- Attitude Indicator -->
+                <div class="dashboard-panel" id="attitude-indicator">
+                    <div class="dashboard-title">ATTITUDE</div>
+                    <div id="attitude-horizon"></div>
+                    <div id="attitude-pitch"></div>
+                </div>
+                
+                <!-- Compass -->
+                <div class="dashboard-panel" id="compass">
+                    <div class="dashboard-title">COMPASS</div>
+                    <div id="compass-rose">N</div>
+                    <div id="compass-needle"></div>
+                </div>
+                
+                <!-- Vertical Speed -->
+                <div class="dashboard-panel">
+                    <div class="dashboard-title">VERTICAL SPEED</div>
+                    <div class="dashboard-value" id="vs-value">0</div>
+                </div>
+                
+                <!-- Gear Status -->
+                <div class="dashboard-panel">
+                    <div class="dashboard-title">GEAR</div>
+                    <div class="dashboard-value" id="gear-value">DOWN</div>
+                </div>
+                
+                <!-- Integrity -->
+                <div class="dashboard-panel">
+                    <div class="dashboard-title">INTEGRITY</div>
+                    <div class="dashboard-value" id="integrity-value">100%</div>
+                </div>
+                
+                <!-- Time -->
+                <div class="dashboard-panel">
+                    <div class="dashboard-title">TIME</div>
+                    <div class="dashboard-value" id="time-value">12:00</div>
+                </div>
+                
+                <!-- Weapon Status -->
+                <div class="dashboard-panel">
+                    <div class="dashboard-title">WEAPON</div>
+                    <div class="dashboard-value" id="weapon-value">NONE</div>
+                </div>
             </div>
         </div>
+        
+        <div id="pov-indicator">POV CAMERA: <span id="pov-state" style="font-weight:bold;">AUTO-TRACK</span><br><span style="font-size:0.8em; color:#8b9bb4;">Click + Drag Mouse to Orbit</span></div>
     </div>
 
     <!-- Core Graphics Engines -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="aircraft.js"></script>
     <script src="simulator.js"></script>
+    <script>
+        // Toggle How to Play panel
+        function toggleHowToPlay() {
+            const panel = document.getElementById('how-to-play');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
 </body>
 </html>

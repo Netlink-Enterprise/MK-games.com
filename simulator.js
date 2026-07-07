@@ -18,6 +18,13 @@ let lastMouseCoordinateY = 0;
 let leftGearGroup, rightGearGroup, rightExhaustGlow, leftExhaustGlow;
 let propEngineBlades = [];
 
+// Track previous values for gauges
+let prevAltitude = 0;
+let prevSpeed = 0;
+let prevPitch = 0;
+let prevRoll = 0;
+let prevHeading = 0;
+
 // --- GRAPHICS ENVIRONMENT SETUP ---
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x7ec0ee);
@@ -173,12 +180,13 @@ function setLaser(id, desc, element) {
 
 function engageFlight() {
     document.getElementById('entry-screen').style.opacity = '0';
+    document.getElementById('how-to-play').style.display = 'none';
     setTimeout(() => {
         document.getElementById('entry-screen').style.display = 'none';
         document.getElementById('hud-container').style.display = 'block';
         document.getElementById('active-plane-title').innerText = activeProfile.name;
-        document.getElementById('weapon-indicator').innerText = activeProfile.isMilitary ? `AUTOCANNON (G)` : "NONE";
-        document.getElementById('weapon-indicator').style.color = activeProfile.isMilitary ? "#ff3333" : "#8b9bb4";
+        document.getElementById('weapon-value').innerText = activeProfile.isMilitary ? 'ARMED' : 'NONE';
+        document.getElementById('weapon-value').style.color = activeProfile.isMilitary ? '#ff3333' : '#8b9bb4';
 
         integrity = 100; 
         speed = activeProfile.speed;
@@ -187,6 +195,13 @@ function engageFlight() {
         isMouseDragging = false;
         aircraftGroup.position.set(0, 350, 0); 
         aircraftGroup.rotation.set(0,0,0);
+        
+        // Reset gauge values
+        prevAltitude = 0;
+        prevSpeed = 0;
+        prevPitch = 0;
+        prevRoll = 0;
+        prevHeading = 0;
         
         manufactureAircraft();
         flightActive = true;
@@ -204,7 +219,14 @@ function returnToHangar() {
     document.getElementById('death-screen').style.display = 'none';
     document.getElementById('entry-screen').style.display = 'flex'; 
     document.getElementById('entry-screen').style.opacity = '1';
+    document.getElementById('how-to-play').style.display = 'none';
     manufactureAircraft();
+}
+
+// Toggle How to Play panel
+function toggleHowToPlay() {
+    const panel = document.getElementById('how-to-play');
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
 }
 
 // --- MOUSE MAPPING POV INTERCEPT HANDLERS ---
@@ -297,6 +319,11 @@ function runSimulationLoops() {
             rightExhaustGlow.visible = false; 
         }
     }
+    
+    // Store previous values for gauge animation
+    const currentAltitude = aircraftGroup.position.y * 3.3;
+    const currentSpeedVal = speed * 220;
+    
     speed = THREE.MathUtils.lerp(speed, targetSpeed, 0.05);
     aircraftGroup.position.y -= activeProfile.mass * (1.1 - (speed / (activeProfile.speed * 1.6)));
     aircraftGroup.translateZ(-speed);
@@ -369,9 +396,12 @@ function runSimulationLoops() {
     scene.background.setHSL(0.58, 0.5, cycleVal * 0.4 + 0.1);
     scene.fog.color.setHSL(0.58, 0.5, cycleVal * 0.4 + 0.1);
 
-    // Sync Telemetry Display Texts
-    document.getElementById('dash-alt').innerText = Math.floor(py * 3.3);
-    document.getElementById('dash-spd').innerText = Math.floor(speed * 220);
+    // Update Dashboard
+    updateDashboard(currentAltitude, currentSpeedVal);
+    
+    // Sync old display texts (for compatibility)
+    document.getElementById('dash-alt').innerText = Math.floor(currentAltitude);
+    document.getElementById('dash-spd').innerText = Math.floor(currentSpeedVal);
     document.getElementById('dash-gear').innerText = isGearDeployed ? "DEPLOYED" : "RETRACTED";
     document.getElementById('dash-gear').style.color = isGearDeployed ? "#00ff66" : "#ffaa00";
     document.getElementById('dash-hull').innerText = integrity + "%";
@@ -379,6 +409,67 @@ function runSimulationLoops() {
     let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2,'0');
     let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2,'0');
     document.getElementById('dash-time').innerText = `${hr}:${mn}`;
+}
+
+// Update the enhanced dashboard
+function updateDashboard(altitude, speedVal) {
+    // Altimeter
+    const altNeedle = document.getElementById('alt-needle');
+    const altValue = document.getElementById('alt-value');
+    const altRotation = Math.min(180, altitude / 2);
+    altNeedle.style.transform = `translateX(-50%) rotate(${180 - altRotation}deg)`;
+    altValue.innerText = Math.floor(altitude);
+    
+    // Speed gauge
+    const speedNeedle = document.getElementById('speed-needle');
+    const speedValue = document.getElementById('speed-value');
+    const speedRotation = Math.min(180, speedVal / 2);
+    speedNeedle.style.transform = `translateX(-50%) rotate(${180 - speedRotation}deg)`;
+    speedValue.innerText = Math.floor(speedVal);
+    
+    // Attitude indicator
+    const pitch = aircraftGroup.rotation.x * (180 / Math.PI);
+    const roll = aircraftGroup.rotation.z * (180 / Math.PI);
+    const horizon = document.getElementById('attitude-horizon');
+    const pitchLine = document.getElementById('attitude-pitch');
+    
+    // Simulate horizon movement based on pitch and roll
+    const pitchPercent = (pitch / 180) * 50;
+    horizon.style.transform = `translateY(calc(-50% + ${pitchPercent}%))`;
+    pitchLine.style.transform = `translate(-50%, -50%) rotate(${roll}deg)`;
+    
+    // Compass
+    const compassNeedle = document.getElementById('compass-needle');
+    const heading = aircraftGroup.rotation.y * (180 / Math.PI);
+    compassNeedle.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
+    
+    // Vertical speed
+    const vsValue = document.getElementById('vs-value');
+    const verticalSpeed = (prevAltitude - altitude) * 10;
+    vsValue.innerText = Math.floor(verticalSpeed);
+    vsValue.className = verticalSpeed > 50 ? 'dashboard-value danger' : verticalSpeed < -50 ? 'dashboard-value warning' : 'dashboard-value';
+    
+    // Gear
+    const gearValue = document.getElementById('gear-value');
+    gearValue.innerText = isGearDeployed ? 'DOWN' : 'UP';
+    gearValue.className = isGearDeployed ? 'dashboard-value' : 'dashboard-value warning';
+    
+    // Integrity
+    const integrityValue = document.getElementById('integrity-value');
+    integrityValue.innerText = integrity + '%';
+    integrityValue.className = integrity < 30 ? 'dashboard-value danger' : integrity < 70 ? 'dashboard-value warning' : 'dashboard-value';
+    
+    // Time
+    let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2,'0');
+    let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2,'0');
+    document.getElementById('time-value').innerText = `${hr}:${mn}`;
+    
+    // Store current values for next frame
+    prevAltitude = altitude;
+    prevSpeed = speedVal;
+    prevPitch = pitch;
+    prevRoll = roll;
+    prevHeading = heading;
 }
 
 // --- RIGID INTERACTIVE ADVANCED MOUSE ORBIT RE-CENTER SPRING ---
