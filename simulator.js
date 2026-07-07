@@ -334,12 +334,12 @@ function runSimulationLoops() {
 
     if (aircraftGroup.position.y < 45) {
         isGearDeployed = true;
-        leftGearGroup.scale.setScalar(1); 
-        rightGearGroup.scale.setScalar(1);
+        if (leftGearGroup) leftGearGroup.scale.setScalar(1); 
+        if (rightGearGroup) rightGearGroup.scale.setScalar(1);
     } else {
         isGearDeployed = false;
-        leftGearGroup.scale.setScalar(0); 
-        rightGearGroup.scale.setScalar(0);
+        if (leftGearGroup) leftGearGroup.scale.setScalar(0); 
+        if (rightGearGroup) rightGearGroup.scale.setScalar(0);
     }
 
     for (let i = laserProjectiles.length - 1; i >= 0; i--) {
@@ -399,77 +399,78 @@ function runSimulationLoops() {
     // Update Dashboard
     updateDashboard(currentAltitude, currentSpeedVal);
     
-    // Sync old display texts (for compatibility)
-    document.getElementById('dash-alt').innerText = Math.floor(currentAltitude);
-    document.getElementById('dash-spd').innerText = Math.floor(currentSpeedVal);
-    document.getElementById('dash-gear').innerText = isGearDeployed ? "DEPLOYED" : "RETRACTED";
-    document.getElementById('dash-gear').style.color = isGearDeployed ? "#00ff66" : "#ffaa00";
-    document.getElementById('dash-hull').innerText = integrity + "%";
-    
-    let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2,'0');
-    let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2,'0');
-    document.getElementById('dash-time').innerText = `${hr}:${mn}`;
+    // Store current values for next frame
+    prevAltitude = currentAltitude;
+    prevSpeed = currentSpeedVal;
 }
 
 // Update the enhanced dashboard
 function updateDashboard(altitude, speedVal) {
-    // Altimeter
+    // Check if dashboard elements exist
     const altNeedle = document.getElementById('alt-needle');
     const altValue = document.getElementById('alt-value');
+    const speedNeedle = document.getElementById('speed-needle');
+    const speedValue = document.getElementById('speed-value');
+    const horizon = document.getElementById('attitude-horizon');
+    const pitchLine = document.getElementById('attitude-pitch');
+    const compassNeedle = document.getElementById('compass-needle');
+    const vsValue = document.getElementById('vs-value');
+    const gearValue = document.getElementById('gear-value');
+    const integrityValue = document.getElementById('integrity-value');
+    const timeValue = document.getElementById('time-value');
+    
+    if (!altNeedle || !altValue || !speedNeedle || !speedValue) return;
+    
+    // Altimeter
     const altRotation = Math.min(180, altitude / 2);
     altNeedle.style.transform = `translateX(-50%) rotate(${180 - altRotation}deg)`;
     altValue.innerText = Math.floor(altitude);
     
     // Speed gauge
-    const speedNeedle = document.getElementById('speed-needle');
-    const speedValue = document.getElementById('speed-value');
     const speedRotation = Math.min(180, speedVal / 2);
     speedNeedle.style.transform = `translateX(-50%) rotate(${180 - speedRotation}deg)`;
     speedValue.innerText = Math.floor(speedVal);
     
     // Attitude indicator
-    const pitch = aircraftGroup.rotation.x * (180 / Math.PI);
-    const roll = aircraftGroup.rotation.z * (180 / Math.PI);
-    const horizon = document.getElementById('attitude-horizon');
-    const pitchLine = document.getElementById('attitude-pitch');
-    
-    // Simulate horizon movement based on pitch and roll
-    const pitchPercent = (pitch / 180) * 50;
-    horizon.style.transform = `translateY(calc(-50% + ${pitchPercent}%))`;
-    pitchLine.style.transform = `translate(-50%, -50%) rotate(${roll}deg)`;
+    if (horizon && pitchLine) {
+        const pitch = aircraftGroup.rotation.x * (180 / Math.PI);
+        const roll = aircraftGroup.rotation.z * (180 / Math.PI);
+        const pitchPercent = (pitch / 180) * 50;
+        horizon.style.transform = `translateY(calc(-50% + ${pitchPercent}%))`;
+        pitchLine.style.transform = `translate(-50%, -50%) rotate(${roll}deg)`;
+    }
     
     // Compass
-    const compassNeedle = document.getElementById('compass-needle');
-    const heading = aircraftGroup.rotation.y * (180 / Math.PI);
-    compassNeedle.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
+    if (compassNeedle) {
+        const heading = aircraftGroup.rotation.y * (180 / Math.PI);
+        compassNeedle.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
+    }
     
     // Vertical speed
-    const vsValue = document.getElementById('vs-value');
-    const verticalSpeed = (prevAltitude - altitude) * 10;
-    vsValue.innerText = Math.floor(verticalSpeed);
-    vsValue.className = verticalSpeed > 50 ? 'dashboard-value danger' : verticalSpeed < -50 ? 'dashboard-value warning' : 'dashboard-value';
+    if (vsValue) {
+        const verticalSpeed = (prevAltitude - altitude) * 10;
+        vsValue.innerText = Math.floor(verticalSpeed);
+        vsValue.className = verticalSpeed > 50 ? 'dashboard-value danger' : verticalSpeed < -50 ? 'dashboard-value warning' : 'dashboard-value';
+    }
     
     // Gear
-    const gearValue = document.getElementById('gear-value');
-    gearValue.innerText = isGearDeployed ? 'DOWN' : 'UP';
-    gearValue.className = isGearDeployed ? 'dashboard-value' : 'dashboard-value warning';
+    if (gearValue) {
+        gearValue.innerText = isGearDeployed ? 'DOWN' : 'UP';
+        gearValue.className = isGearDeployed ? 'dashboard-value' : 'dashboard-value warning';
+    }
     
     // Integrity
-    const integrityValue = document.getElementById('integrity-value');
-    integrityValue.innerText = integrity + '%';
-    integrityValue.className = integrity < 30 ? 'dashboard-value danger' : integrity < 70 ? 'dashboard-value warning' : 'dashboard-value';
+    if (integrityValue) {
+        integrityValue.innerText = integrity + '%';
+        integrityValue.className = integrity < 30 ? 'dashboard-value danger' : integrity < 70 ? 'dashboard-value warning' : 'dashboard-value';
+    }
     
     // Time
-    let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2,'0');
-    let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2,'0');
-    document.getElementById('time-value').innerText = `${hr}:${mn}`;
-    
-    // Store current values for next frame
-    prevAltitude = altitude;
-    prevSpeed = speedVal;
-    prevPitch = pitch;
-    prevRoll = roll;
-    prevHeading = heading;
+    if (timeValue) {
+        let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2,'0');
+        let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2,'0');
+        timeValue.innerText = `${hr}:${mn}`;
+    }
 }
 
 // --- RIGID INTERACTIVE ADVANCED MOUSE ORBIT RE-CENTER SPRING ---
