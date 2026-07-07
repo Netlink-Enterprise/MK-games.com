@@ -156,9 +156,8 @@ function selectHangarPlane(key, element) {
     element.classList.add('active');
     document.getElementById('weapon-custom-box').style.display = activeProfile.isMilitary ? 'block' : 'none';
     
-    if (!flightActive) {
-        manufactureAircraft();
-    }
+    // Manufacture aircraft immediately when selected
+    manufactureAircraft();
 }
 
 function setSkin(id, desc, element) {
@@ -285,6 +284,7 @@ function engageFlight() {
         // Position aircraft
         aircraftGroup.position.set(0, 350, 0); 
         aircraftGroup.rotation.set(0,0,0);
+        aircraftGroup.visible = true;
         
         // Spawn bots if in multiplayer with bots enabled
         if (gameMode === 'multiplayer' && botDifficulty !== 'none') {
@@ -589,6 +589,9 @@ function returnToHangar() {
     // Show aircraft again
     aircraftGroup.visible = true;
     
+    // Manufacture default aircraft
+    selectedType = 'f22';
+    activeProfile = fleetProfiles[selectedType];
     manufactureAircraft();
 }
 
