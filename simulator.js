@@ -1,3 +1,10 @@
+// Global game state
+let gameMode = 'singleplayer';
+let currentUsername = 'GUEST';
+let isAdmin = false;
+let botDifficulty = 'none';
+let players = [];
+
 // --- GLOBAL SYSTEM AND CUSTOM DECK TRACKING CONTROLS ---
 let flightActive = false;
 let speed = 0.5; 
@@ -43,6 +50,7 @@ scene.add(sunLight, new THREE.AmbientLight(0xffffff, 0.55));
 
 const terrainObstacles = [];
 const laserProjectiles = [];
+const botAircraft = [];
 
 // --- AIRFRAME CONFIGURATOR ---
 const aircraftGroup = new THREE.Group();
@@ -175,6 +183,14 @@ function setLaser(id, desc, element) {
     element.classList.add('active');
 }
 
+function setBotDifficulty(id, desc, element) {
+    botDifficulty = id;
+    document.getElementById('lbl-bots').innerText = desc;
+    const buttons = element.parentNode.querySelectorAll('.color-btn');
+    buttons.forEach(b => b.classList.remove('active'));
+    element.classList.add('active');
+}
+
 function engageFlight() {
     document.getElementById('entry-screen').style.opacity = '0';
     document.getElementById('how-to-play').style.display = 'none';
@@ -182,6 +198,7 @@ function engageFlight() {
         document.getElementById('entry-screen').style.display = 'none';
         document.getElementById('hud-container').style.display = 'block';
         document.getElementById('active-plane-title').innerText = activeProfile.name;
+        document.getElementById('current-username').innerText = currentUsername;
 
         integrity = 100; 
         speed = activeProfile.speed;
@@ -195,9 +212,98 @@ function engageFlight() {
         prevAltitude = 0;
         prevSpeed = 0;
         
+        // Spawn bots if in multiplayer with bots enabled
+        if (gameMode === 'multiplayer' && botDifficulty !== 'none') {
+            spawnBots();
+        }
+        
         manufactureAircraft();
         flightActive = true;
     }, 300);
+}
+
+function spawnBots() {
+    // Clear existing bots
+    botAircraft.forEach(bot => {
+        if (bot.group) {
+            scene.remove(bot.group);
+        }
+    });
+    botAircraft.length = 0;
+    
+    const botCount = botDifficulty === 'easy' ? 2 : botDifficulty === 'medium' ? 4 : 6;
+    
+    for (let i = 0; i < botCount; i++) {
+        // Select a random aircraft for the bot
+        const botTypes = Object.keys(fleetProfiles);
+        const randomType = botTypes[Math.floor(Math.random() * botTypes.length)];
+        const botProfile = fleetProfiles[randomType];
+        
+        // Create bot aircraft
+        const botGroup = new THREE.Group();
+        
+        // Simple bot aircraft model
+        const botSkin = new THREE.MeshStandardMaterial({ 
+            color: 0xff0000, 
+            roughness: 0.38, 
+            metalness: 0.45 
+        });
+        
+        const botFuselage = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.5, 4.0), botSkin);
+        const botWingL = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.05, 1.5), botSkin);
+        botWingL.position.set(-1.5, 0, 0);
+        const botWingR = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.05, 1.5), botSkin);
+        botWingR.position.set(1.5, 0, 0);
+        
+        botGroup.add(botFuselage, botWingL, botWingR);
+        
+        // Position bot randomly
+        botGroup.position.set(
+            (Math.random() - 0.5) * 500,
+            200 + Math.random() * 100,
+            (Math.random() - 0.5) * 500
+        );
+        
+        scene.add(botGroup);
+        
+        botAircraft.push({
+            group: botGroup,
+            profile: botProfile,
+            speed: botProfile.speed * 0.8,
+            direction: new THREE.Vector3(
+                Math.random() - 0.5,
+                0,
+                Math.random() - 0.5
+            ).normalize()
+        });
+    }
+}
+
+function updateBots() {
+    if (!flightActive) return;
+    
+    botAircraft.forEach(bot => {
+        // Move bot in its direction
+        bot.group.position.add(bot.direction.clone().multiplyScalar(bot.speed * 0.1));
+        
+        // Simple AI: change direction occasionally
+        if (Math.random() < 0.01) {
+            bot.direction = new THREE.Vector3(
+                Math.random() - 0.5,
+                0,
+                Math.random() - 0.5
+            ).normalize();
+        }
+        
+        // Keep bot within bounds
+        if (bot.group.position.y < 50) {
+            bot.group.position.y = 50;
+            bot.direction.y = Math.abs(bot.direction.y);
+        }
+        
+        // Simple rotation to face direction
+        bot.group.lookAt(bot.group.position.clone().add(bot.direction.clone().multiplyScalar(10)));
+    });
 }
 
 function forceCrashState() {
@@ -205,6 +311,14 @@ function forceCrashState() {
     isMouseDragging = false;
     document.getElementById('hud-container').style.display = 'none';
     document.getElementById('death-screen').style.display = 'flex';
+    
+    // Clean up bots
+    botAircraft.forEach(bot => {
+        if (bot.group) {
+            scene.remove(bot.group);
+        }
+    });
+    botAircraft.length = 0;
 }
 
 function returnToHangar() {
@@ -212,6 +326,15 @@ function returnToHangar() {
     document.getElementById('entry-screen').style.display = 'flex'; 
     document.getElementById('entry-screen').style.opacity = '1';
     document.getElementById('how-to-play').style.display = 'none';
+    
+    // Clean up bots
+    botAircraft.forEach(bot => {
+        if (bot.group) {
+            scene.remove(bot.group);
+        }
+    });
+    botAircraft.length = 0;
+    
     manufactureAircraft();
 }
 
@@ -219,6 +342,94 @@ function returnToHangar() {
 function toggleHowToPlay() {
     const panel = document.getElementById('how-to-play');
     panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+// Mode selection functions
+function selectSinglePlayer() {
+    gameMode = 'singleplayer';
+    currentUsername = 'GUEST';
+    document.getElementById('current-username').innerText = 'GUEST';
+    document.getElementById('username-display').innerText = 'PILOT: GUEST';
+    document.getElementById('game-mode-indicator').innerText = 'MODE: SINGLEPLAYER';
+    document.getElementById('mode-select-screen').style.display = 'none';
+    document.getElementById('entry-screen').style.display = 'flex';
+    document.getElementById('entry-screen').style.opacity = '1';
+    document.getElementById('multiplayer-ui').style.display = 'none';
+    document.getElementById('player-list').style.display = 'none';
+}
+
+function selectMultiPlayer() {
+    gameMode = 'multiplayer';
+    document.getElementById('game-mode-indicator').innerText = 'MODE: MULTIPLAYER';
+    document.getElementById('mode-select-screen').style.display = 'none';
+    
+    const username = prompt('Enter your username for multiplayer:');
+    if (username && username.trim() !== '') {
+        currentUsername = username.trim().substring(0, 20);
+        document.getElementById('current-username').innerText = currentUsername;
+        document.getElementById('username-display').innerText = 'PILOT: ' + currentUsername;
+        document.getElementById('entry-screen').style.display = 'flex';
+        document.getElementById('entry-screen').style.opacity = '1';
+        document.getElementById('multiplayer-ui').style.display = 'flex';
+        document.getElementById('player-list').style.display = 'block';
+        updatePlayerList();
+    } else {
+        document.getElementById('mode-select-screen').style.display = 'flex';
+    }
+}
+
+function showAdminLogin() {
+    document.getElementById('mode-select-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+}
+
+function backToModeSelect() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('mode-select-screen').style.display = 'flex';
+    document.getElementById('login-error').innerText = '';
+}
+
+function checkAdminPassword() {
+    const password = document.getElementById('admin-password').value;
+    if (password === 'mb12348765') {
+        isAdmin = true;
+        currentUsername = 'ADMIN';
+        gameMode = 'multiplayer';
+        document.getElementById('current-username').innerText = 'ADMIN';
+        document.getElementById('username-display').innerText = 'PILOT: ADMIN';
+        document.getElementById('game-mode-indicator').innerText = 'MODE: ADMIN';
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('entry-screen').style.display = 'flex';
+        document.getElementById('entry-screen').style.opacity = '1';
+        document.getElementById('multiplayer-ui').style.display = 'flex';
+        document.getElementById('player-list').style.display = 'block';
+        updatePlayerList();
+    } else {
+        document.getElementById('login-error').innerText = 'Incorrect password!';
+        document.getElementById('admin-password').value = '';
+    }
+}
+
+function updatePlayerList() {
+    const playerList = document.getElementById('player-list');
+    playerList.innerHTML = '<div style="color: #ffd700; font-weight: bold; margin-bottom: 5px;">ONLINE PILOTS</div>';
+    
+    playerList.innerHTML += `
+        <div class="player-item" style="color: #00ff66;">
+            ${currentUsername} (YOU)
+        </div>
+    `;
+    
+    if (gameMode === 'multiplayer' && botDifficulty !== 'none') {
+        const botCount = botDifficulty === 'easy' ? 2 : botDifficulty === 'medium' ? 4 : 6;
+        for (let i = 1; i <= botCount; i++) {
+            playerList.innerHTML += `
+                <div class="player-item">
+                    BOT-${i} (AI - ${botDifficulty.toUpperCase()})
+                </div>
+            `;
+        }
+    }
 }
 
 // --- MOUSE MAPPING POV INTERCEPT HANDLERS ---
@@ -344,6 +555,9 @@ function runSimulationLoops() {
         }
     }
 
+    // Update bots
+    updateBots();
+
     // --- ACCURATE AABB FLIGHT BOUNDING BOX INTERSECTS ---
     let px = aircraftGroup.position.x;
     let py = aircraftGroup.position.y;
@@ -398,7 +612,6 @@ function runSimulationLoops() {
 
 // Update the enhanced dashboard
 function updateDashboard(altitude, speedVal) {
-    // Get all dashboard elements safely
     const altNeedle = document.getElementById('alt-needle');
     const altValue = document.getElementById('alt-value');
     const speedNeedle = document.getElementById('speed-needle');
@@ -408,40 +621,34 @@ function updateDashboard(altitude, speedVal) {
     const vsValue = document.getElementById('vs-value');
     const timeValue = document.getElementById('time-value');
     
-    // Altimeter
     if (altNeedle && altValue) {
         const altRotation = Math.min(180, altitude / 2);
         altNeedle.style.transform = `translateX(-50%) rotate(${180 - altRotation}deg)`;
         altValue.innerText = Math.floor(altitude);
     }
     
-    // Speed gauge
     if (speedNeedle && speedValue) {
         const speedRotation = Math.min(180, speedVal / 2);
         speedNeedle.style.transform = `translateX(-50%) rotate(${180 - speedRotation}deg)`;
         speedValue.innerText = Math.floor(speedVal);
     }
     
-    // Gear
     if (gearValue) {
         gearValue.innerText = isGearDeployed ? 'DOWN' : 'UP';
         gearValue.className = isGearDeployed ? 'dashboard-value' : 'dashboard-value warning';
     }
     
-    // Integrity
     if (integrityValue) {
         integrityValue.innerText = integrity + '%';
         integrityValue.className = integrity < 30 ? 'dashboard-value danger' : integrity < 70 ? 'dashboard-value warning' : 'dashboard-value';
     }
     
-    // Vertical speed
     if (vsValue) {
         const verticalSpeed = (prevAltitude - altitude) * 10;
         vsValue.innerText = Math.floor(verticalSpeed);
         vsValue.className = verticalSpeed > 50 ? 'dashboard-value danger' : verticalSpeed < -50 ? 'dashboard-value warning' : 'dashboard-value';
     }
     
-    // Time
     if (timeValue) {
         let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2,'0');
         let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2,'0');
@@ -453,26 +660,22 @@ function updateDashboard(altitude, speedVal) {
 function trackCameraSpring() {
     if (!flightActive) return;
 
-    // Return camera orbit properties back to tail neutral when mouse is released
     if (!isMouseDragging) {
         cameraOrbitTheta = THREE.MathUtils.lerp(cameraOrbitTheta, 0, 0.08);
         cameraOrbitPhi = THREE.MathUtils.lerp(cameraOrbitPhi, 0.16, 0.08);
     }
 
-    // Calculate spherical displacement coordinate points relative to plane orientation
     let cameraRadiusDistance = activeProfile.type === "heavy" ? 19.0 : 14.5;
     
     let sphericalOffset = new THREE.Vector3(
         cameraRadiusDistance * Math.sin(cameraOrbitTheta) * Math.cos(cameraOrbitPhi),
-        cameraRadiusDistance * Math.sin(cameraOrbitPhi) + 2.2, // Elevation adjustment
+        cameraRadiusDistance * Math.sin(cameraOrbitPhi) + 2.2,
         cameraRadiusDistance * Math.cos(cameraOrbitTheta) * Math.cos(cameraOrbitPhi)
     );
 
-    // Matrix Transform relative spatial positioning systems
     let absoluteWorldOffset = sphericalOffset.applyMatrix4(aircraftGroup.matrixWorld);
-    camera.position.lerp(absoluteWorldOffset, 0.2); // Smooth position interpolation
+    camera.position.lerp(absoluteWorldOffset, 0.2);
     
-    // Camera tracks slightly ahead of nose line
     let targetLookPosition = new THREE.Vector3(0, 0.4, -3.0).applyMatrix4(aircraftGroup.matrixWorld);
     camera.lookAt(targetLookPosition);
 }
@@ -492,5 +695,8 @@ window.addEventListener('resize', () => {
 
 // Initialize with first aircraft
 manufactureAircraft();
+
+// Start with mode select screen
+selectSinglePlayer();
 
 renderEngineLoop();
