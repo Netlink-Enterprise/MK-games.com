@@ -4,97 +4,337 @@
     <meta charset="UTF-8">
     <title>Sky-Bound Flight Simulator | Advanced Mouse POV & Hangar</title>
     <style>
-        body { margin: 0; background: #020612; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+        body { 
+            margin: 0; 
+            background: #020612; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            user-select: none; 
+        }
         
         .overlay-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 100; transition: opacity 0.3s ease;
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center;
+            z-index: 100; 
+            transition: opacity 0.3s ease;
         }
         
         #entry-screen {
             background: radial-gradient(circle at center, #0d1e36 0%, #020710 100%);
-            color: white; overflow-y: auto; padding: 20px 0;
+            color: white; 
+            overflow-y: auto; 
+            padding: 20px 0;
         }
 
         #death-screen {
             background: rgba(138, 3, 3, 0.93);
-            color: white; display: none; backdrop-filter: blur(8px);
+            color: white; 
+            display: none; 
+            backdrop-filter: blur(8px);
         }
 
         .hangar-layout {
-            display: flex; flex-direction: row; gap: 20px;
-            background: rgba(6, 13, 26, 0.96); border: 2px solid #1a365d;
-            padding: 25px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-            max-width: 1100px; width: 95%; margin: auto; height: 80vh;
+            display: flex; 
+            flex-direction: row; 
+            gap: 20px;
+            background: rgba(6, 13, 26, 0.96); 
+            border: 2px solid #1a365d;
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            max-width: 1100px; 
+            width: 95%; 
+            margin: auto; 
+            height: 80vh;
         }
 
-        .panel-left { flex: 1.8; display: flex; flex-direction: column; height: 100%; }
-        .panel-right { flex: 1.2; background: #050d1a; border: 1px solid #10223b; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto; }
+        .panel-left { 
+            flex: 1.8; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100%; 
+        }
+        .panel-right { 
+            flex: 1.2; 
+            background: #050d1a; 
+            border: 1px solid #10223b; 
+            border-radius: 8px; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            overflow-y: auto; 
+        }
 
-        #founder-banner { font-size: 0.8em; letter-spacing: 4px; color: #ffd700; font-weight: bold; margin-bottom: 5px; text-align: left; }
-        h1 { margin: 0 0 15px 0; font-size: 2.1em; text-transform: uppercase; letter-spacing: 2px; text-align: left; }
+        #founder-banner { 
+            font-size: 0.8em; 
+            letter-spacing: 4px; 
+            color: #ffd700; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            text-align: left; 
+        }
+        h1 { 
+            margin: 0 0 15px 0; 
+            font-size: 2.1em; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            text-align: left; 
+        }
         
         .selector-grid { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
-            gap: 10px; overflow-y: auto; flex-grow: 1; padding-right: 5px;
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+            gap: 10px; 
+            overflow-y: auto; 
+            flex-grow: 1; 
+            padding-right: 5px;
         }
         
-        .selector-grid::-webkit-scrollbar, .panel-right::-webkit-scrollbar { width: 6px; }
-        .selector-grid::-webkit-scrollbar-track, .panel-right::-webkit-scrollbar-track { background: #040d1a; }
-        .selector-grid::-webkit-scrollbar-thumb, .panel-right::-webkit-scrollbar-thumb { background: #1e3d59; border-radius: 3px; }
+        .selector-grid::-webkit-scrollbar, .panel-right::-webkit-scrollbar { 
+            width: 6px; 
+        }
+        .selector-grid::-webkit-scrollbar-track, .panel-right::-webkit-scrollbar-track { 
+            background: #040d1a; 
+        }
+        .selector-grid::-webkit-scrollbar-thumb, .panel-right::-webkit-scrollbar-thumb { 
+            background: #1e3d59; 
+            border-radius: 3px; 
+        }
 
         .card-option {
-            background: #050d1a; border: 1px solid #10223b; border-radius: 6px;
-            padding: 12px; cursor: pointer; text-align: left; transition: all 0.2s ease;
+            background: #050d1a; 
+            border: 1px solid #10223b; 
+            border-radius: 6px;
+            padding: 12px; 
+            cursor: pointer; 
+            text-align: left; 
+            transition: all 0.2s ease;
         }
-        .card-option:hover { border-color: #17b978; background: #0a1729; }
-        .card-option.active { border-color: #17b978; background: #0c253f; box-shadow: 0 0 10px rgba(23,185,120,0.25); }
-        .card-title { font-weight: bold; font-size: 1em; color: #fff; display: flex; justify-content: space-between; align-items: center; }
-        .card-class { font-size: 0.65em; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-        .class-mil { background: #7a2222; color: #ffcccc; }
-        .class-civ { background: #226b35; color: #ccffdd; }
-        .card-desc { font-size: 0.75em; color: #8b9bb4; margin-top: 4px; line-height: 1.3; }
+        .card-option:hover { 
+            border-color: #17b978; 
+            background: #0a1729; 
+        }
+        .card-option.active { 
+            border-color: #17b978; 
+            background: #0c253f; 
+            box-shadow: 0 0 10px rgba(23,185,120,0.25); 
+        }
+        .card-title { 
+            font-weight: bold; 
+            font-size: 1em; 
+            color: #fff; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .card-class { 
+            font-size: 0.65em; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+        .class-mil { 
+            background: #7a2222; 
+            color: #ffcccc; 
+        }
+        .class-civ { 
+            background: #226b35; 
+            color: #ccffdd; 
+        }
+        .card-desc { 
+            font-size: 0.75em; 
+            color: #8b9bb4; 
+            margin-top: 4px; 
+            line-height: 1.3; 
+        }
 
-        .section-title { font-size: 0.9em; color: #ffd700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #10223b; padding-bottom: 4px; }
-        .control-group { margin-bottom: 18px; text-align: left; }
-        .control-label { display: flex; justify-content: space-between; font-size: 0.85em; color: #fff; margin-bottom: 6px; font-weight: 500; }
-        .control-label span { color: #17b978; font-family: monospace; }
+        .section-title { 
+            font-size: 0.9em; 
+            color: #ffd700; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 12px; 
+            border-bottom: 1px solid #10223b; 
+            padding-bottom: 4px; 
+        }
+        .control-group { 
+            margin-bottom: 18px; 
+            text-align: left; 
+        }
+        .control-label { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.85em; 
+            color: #fff; 
+            margin-bottom: 6px; 
+            font-weight: 500; 
+        }
+        .control-label span { 
+            color: #17b978; 
+            font-family: monospace; 
+        }
         
-        .color-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .color-btn { background: #091526; border: 1px solid #1a365d; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 0.75em; transition: all 0.15s; text-align: center; }
-        .color-btn:hover { border-color: #17b978; }
-        .color-btn.active { background: #17b978; border-color: #17b978; color: white; font-weight: bold; }
+        .color-picker-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 6px; 
+        }
+        .color-btn { 
+            background: #091526; 
+            border: 1px solid #1a365d; 
+            color: white; 
+            padding: 8px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 0.75em; 
+            transition: all 0.15s; 
+            text-align: center; 
+        }
+        .color-btn:hover { 
+            border-color: #17b978; 
+        }
+        .color-btn.active { 
+            background: #17b978; 
+            border-color: #17b978; 
+            color: white; 
+            font-weight: bold; 
+        }
 
-        .slider-input { width: 100%; -webkit-appearance: none; background: #0d1e36; height: 6px; border-radius: 3px; outline: none; margin: 8px 0; }
-        .slider-input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #17b978; cursor: pointer; transition: transform 0.1s; }
-        .slider-input::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .slider-input { 
+            width: 100%; 
+            -webkit-appearance: none; 
+            background: #0d1e36; 
+            height: 6px; 
+            border-radius: 3px; 
+            outline: none; 
+            margin: 8px 0; 
+        }
+        .slider-input::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            width: 16px; 
+            height: 16px; 
+            border-radius: 50%; 
+            background: #17b978; 
+            cursor: pointer; 
+            transition: transform 0.1s; 
+        }
+        .slider-input::-webkit-slider-thumb:hover { 
+            transform: scale(1.2); 
+        }
 
         .btn-main {
-            background: #17b978; color: white; border: none; padding: 14px;
-            font-size: 1.1em; font-weight: bold; border-radius: 6px; cursor: pointer;
-            letter-spacing: 2px; transition: background 0.2s, transform 0.1s; width: 100%; margin-top: 10px;
+            background: #17b978; 
+            color: white; 
+            border: none; 
+            padding: 14px;
+            font-size: 1.1em; 
+            font-weight: bold; 
+            border-radius: 6px; 
+            cursor: pointer;
+            letter-spacing: 2px; 
+            transition: background 0.2s, transform 0.1s; 
+            width: 100%; 
+            margin-top: 10px;
         }
-        .btn-main:hover { background: #139c65; transform: scale(1.01); }
+        .btn-main:hover { 
+            background: #139c65; 
+            transform: scale(1.01); 
+        }
 
         /* HUD MFD Glass Avionics Panels */
-        #hud-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
+        #hud-container { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            pointer-events: none; 
+            display: none; 
+        }
         #mfd-dashboard {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(2, 5, 12, 0.97); border: 2px solid #1a365d;
-            border-radius: 8px; width: 780px; padding: 14px; display: flex;
-            justify-content: space-between; color: #00ff66; font-family: monospace;
+            position: absolute; 
+            bottom: 20px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            background: rgba(2, 5, 12, 0.97); 
+            border: 2px solid #1a365d;
+            border-radius: 8px; 
+            width: 780px; 
+            padding: 14px; 
+            display: flex;
+            justify-content: space-between; 
+            color: #00ff66; 
+            font-family: monospace;
             box-shadow: 0 5px 25px rgba(0,0,0,0.9);
         }
-        .mfd-screen { border: 1px solid #10223b; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 4px; flex: 1; margin: 0 6px; }
-        .mfd-title { font-size: 0.8em; color: #ffd700; border-bottom: 1px solid #10223b; padding-bottom: 4px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-        .mfd-data { font-size: 1.25em; font-weight: bold; color: #fff; margin: 4px 0; }
-        .mfd-data span { color: #00ff66; }
+        .mfd-screen { 
+            border: 1px solid #10223b; 
+            background: rgba(0,0,0,0.7); 
+            padding: 10px 15px; 
+            border-radius: 4px; 
+            flex: 1; 
+            margin: 0 6px; 
+        }
+        .mfd-title { 
+            font-size: 0.8em; 
+            color: #ffd700; 
+            border-bottom: 1px solid #10223b; 
+            padding-bottom: 4px; 
+            margin-bottom: 6px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+        }
+        .mfd-data { 
+            font-size: 1.25em; 
+            font-weight: bold; 
+            color: #fff; 
+            margin: 4px 0; 
+        }
+        .mfd-data span { 
+            color: #00ff66; 
+        }
 
-        #top-info { position: absolute; top: 20px; left: 20px; color: white; text-shadow: 2px 2px 4px #000; }
-        #weapon-indicator { font-weight: bold; text-shadow: 0 0 8px #ff0000; }
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00ff66; font-size: 24px; font-family: monospace; opacity: 0.6; }
-        #pov-indicator { position: absolute; top: 20px; right: 20px; color: #00ff66; font-family: monospace; font-size: 0.9em; text-align: right; text-shadow: 1px 1px 2px #000; }
+        #top-info { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            color: white; 
+            text-shadow: 2px 2px 4px #000; 
+        }
+        #weapon-indicator { 
+            font-weight: bold; 
+            text-shadow: 0 0 8px #ff0000; 
+        }
+        #crosshair { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            color: #00ff66; 
+            font-size: 24px; 
+            font-family: monospace; 
+            opacity: 0.6; 
+        }
+        #pov-indicator { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            color: #00ff66; 
+            font-family: monospace; 
+            font-size: 0.9em; 
+            text-align: right; 
+            text-shadow: 1px 1px 2px #000; 
+        }
     </style>
 </head>
 <body>
@@ -184,500 +424,7 @@
 
     <!-- Core Graphics Engines -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-    <script>
-        // --- 13 FLEET ARCHITECTURAL COMPREHENSIVE DEFINITIONS ---
-        const fleetProfiles = {
-            f22: { name: "F-22 Raptor", isMilitary: true, speed: 3.0, pitchRate: 0.035, rollRate: 0.055, mass: 0.05, type: "jet" },
-            su57: { name: "Su-57 Felon", isMilitary: true, speed: 3.1, pitchRate: 0.037, rollRate: 0.058, mass: 0.05, type: "jet" },
-            f16: { name: "F-16 Fighting Falcon", isMilitary: true, speed: 2.6, pitchRate: 0.040, rollRate: 0.065, mass: 0.04, type: "jet" },
-            b747: { name: "Boeing 747-8", isMilitary: false, speed: 1.4, pitchRate: 0.010, rollRate: 0.014, mass: 0.45, type: "heavy" },
-            a380: { name: "Airbus A380", isMilitary: false, speed: 1.3, pitchRate: 0.008, rollRate: 0.011, mass: 0.55, type: "heavy" },
-            c130: { name: "C-130 Hercules", isMilitary: true, speed: 1.1, pitchRate: 0.015, rollRate: 0.020, mass: 0.35, type: "heavy" },
-            p51: { name: "P-51 Mustang", isMilitary: false, speed: 1.25, pitchRate: 0.028, rollRate: 0.042, mass: 0.12, type: "prop" },
-            spitfire: { name: "Supermarine Spitfire", isMilitary: false, speed: 1.2, pitchRate: 0.031, rollRate: 0.046, mass: 0.11, type: "prop" },
-            pitts: { name: "Pitts Special S-2B", isMilitary: false, speed: 0.9, pitchRate: 0.048, rollRate: 0.070, mass: 0.04, type: "prop" },
-            cessna172: { name: "Cessna 172 Skyhawk", isMilitary: false, speed: 0.8, pitchRate: 0.018, rollRate: 0.025, mass: 0.08, type: "prop" },
-            a10: { name: "A-10 Thunderbolt II", isMilitary: true, speed: 1.3, pitchRate: 0.024, rollRate: 0.034, mass: 0.22, type: "jet" },
-            concorde: { name: "Aérospatiale Concorde", isMilitary: false, speed: 3.4, pitchRate: 0.011, rollRate: 0.018, mass: 0.38, type: "jet" },
-            sr71: { name: "SR-71 Blackbird", isMilitary: true, speed: 4.5, pitchRate: 0.009, rollRate: 0.015, mass: 0.28, type: "jet" }
-        };
-
-        // --- GLOBAL SYSTEM AND CUSTOM DECK TRACKING CONTROLS ---
-        let selectedType = 'f22';
-        let activeProfile = fleetProfiles[selectedType];
-        let flightActive = false;
-
-        let customSkin = 'grey';
-        let customWingspanScale = 1.0;
-        let customLaserColor = 'red';
-
-        const skinHexMap = {
-            grey: 0x5a697c, desert: 0xc2b280, forest: 0x2d4a22,
-            crimson: 0x990011, blue: 0x1d4ed8, white: 0xf8fafc
-        };
-        const laserHexMap = { red: 0xff0033, green: 0x00ff66, cyan: 0x00f0ff, magenta: 0xff00ff };
-
-        let speed = 0.5; let targetSpeed = 0.5;
-        let isGearDeployed = true; let integrity = 100;
-        let clockTime = 0.35;
-        const inputState = {};
-
-        // --- INTERACTIVE MOUSE INTERCEPT CALCULATIONS FRAMEWORKS ---
-        let isMouseDragging = false;
-        let cameraOrbitTheta = 0;   // Horizontal rotational angles
-        let cameraOrbitPhi = 0.2;    // Vertical look up/down angles
-        let lastMouseCoordinateX = 0;
-        let lastMouseCoordinateY = 0;
-
-        // --- GRAPHICS ENVIRONMENT SETUP ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x7ec0ee);
-        scene.fog = new THREE.FogExp2(0x7ec0ee, 0.0005);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        document.body.appendChild(renderer.domElement);
-
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.4);
-        sunLight.position.set(200, 500, 200);
-        scene.add(sunLight, new THREE.AmbientLight(0xffffff, 0.55));
-
-        const terrainObstacles = [];
-        const laserProjectiles = [];
-
-        // --- PROCEDURAL ELEVATION FIELD CALCULATOR ---
-        function lookupHeight(x, z) {
-            let baseH = Math.cos(x * 0.001) * Math.sin(z * 0.001) * 350;
-            let rippleH = Math.sin(x * 0.0035) * Math.cos(z * 0.0035) * 65;
-            let groundFloor = baseH + rippleH;
-            return groundFloor < -10 ? -10 : groundFloor;
-        }
-
-        const mapDimension = 14000;
-        const terrainGeo = new THREE.PlaneGeometry(mapDimension, mapDimension, 70, 70);
-        const vPositions = terrainGeo.attributes.position;
-        for (let i = 0; i < vPositions.count; i++) {
-            let px = vPositions.getX(i);
-            let py = vPositions.getY(i);
-            vPositions.setZ(i, lookupHeight(px, py));
-        }
-        terrainGeo.computeVertexNormals();
-        const terrainMesh = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({ color: 0x345427, roughness: 0.95, flatShading: true }));
-        terrainMesh.rotation.x = -Math.PI / 2;
-        scene.add(terrainMesh);
-
-        // --- OBSTACLE HAZARD SPATIAL ALLOCATOR ---
-        for (let i = 0; i < 400; i++) {
-            let tx = Math.random() * 8000 - 4000;
-            let tz = Math.random() * 8000 - 4000;
-            let ty = lookupHeight(tx, tz);
-
-            const treeGroup = new THREE.Group();
-            
-            const tBox = new THREE.Mesh(new THREE.BoxGeometry(3, 20, 3), new THREE.MeshStandardMaterial({ color: 0x473121 }));
-            tBox.position.y = 10;
-            treeGroup.add(tBox);
-            terrainObstacles.push({ minX: tx-1.5, maxX: tx+1.5, minY: ty, maxY: ty+20, minZ: tz-1.5, maxZ: tz+1.5 });
-
-            const fBox = new THREE.Mesh(new THREE.BoxGeometry(14, 25, 14), new THREE.MeshStandardMaterial({ color: 0x1b3d22, flatShading: true }));
-            fBox.position.y = 25;
-            treeGroup.add(fBox);
-            terrainObstacles.push({ minX: tx-7, maxX: tx+7, minY: ty+12, maxY: ty+37, minZ: tz-7, maxZ: tz+7 });
-
-            treeGroup.position.set(tx, ty, tz);
-            scene.add(treeGroup);
-        }
-
-        // --- AIRFRAME CONFIGURATOR BLUEPRINTS CONSTRUCTOR ---
-        const aircraftGroup = new THREE.Group();
-        let leftGearGroup, rightGearGroup, rightExhaustGlow, leftExhaustGlow;
-        let propEngineBlades = [];
-        scene.add(aircraftGroup);
-
-        function manufactureAircraft() {
-            while (aircraftGroup.children.length > 0) { aircraftGroup.remove(aircraftGroup.children[0]); }
-            propEngineBlades = [];
-
-            const chosenSkinHex = skinHexMap[customSkin];
-            const metalSkin = new THREE.MeshStandardMaterial({ color: chosenSkinHex, roughness: 0.38, metalness: 0.45 });
-            const canopyMat = new THREE.MeshStandardMaterial({ color: 0x0a1520, transparent: true, opacity: 0.65, roughness: 0.05 });
-            const steelMat = new THREE.MeshStandardMaterial({ color: 0x242424, metalness: 0.8, roughness: 0.3 });
-
-            const mainBody = new THREE.Group();
-
-            // 1. Separate Class Core Fuselage Elements
-            if (activeProfile.type === "heavy") {
-                const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 9.0), metalSkin);
-                const nose = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 16), metalSkin);
-                nose.position.set(0, 0, -4.5); nose.scale.set(1, 1, 1.4);
-                bodyMesh.add(nose);
-                const cockpitGlass = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 0.8), canopyMat);
-                cockpitGlass.position.set(0, 0.6, -4.0); bodyMesh.add(cockpitGlass);
-                mainBody.add(bodyMesh);
-            } else if (activeProfile.type === "prop") {
-                const bodyMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.3, 5.5, 8), metalSkin);
-                bodyMesh.rotation.x = Math.PI / 2;
-                const cockpitGlass = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), canopyMat);
-                cockpitGlass.position.set(0, 0.8, 0.3); cockpitGlass.scale.set(1, 1, 1.8);
-                bodyMesh.add(cockpitGlass);
-                mainBody.add(bodyMesh);
-            } else {
-                const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.6, 5.8), metalSkin);
-                const noseCone = new THREE.Mesh(new THREE.ConeGeometry(0.65, 2.2, 4), metalSkin);
-                noseCone.rotateX(Math.PI/2); noseCone.position.set(0, -0.05, -3.9);
-                bodyMesh.add(noseCone);
-                const cockpitGlass = new THREE.Mesh(new THREE.SphereGeometry(0.38, 16, 16), canopyMat);
-                cockpitGlass.position.set(0, 0.42, -1.3); cockpitGlass.scale.set(1, 0.9, 2.2);
-                bodyMesh.add(cockpitGlass);
-                mainBody.add(bodyMesh);
-            }
-
-            // 2. Adaptive Sizing Component Wingspan Config
-            let baseWingWidth = activeProfile.type === "heavy" ? 12.0 : (activeProfile.type === "prop" ? 6.5 : 7.8);
-            let absoluteWingWidth = baseWingWidth * customWingspanScale;
-
-            if (activeProfile.type === "heavy") {
-                const wingL = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.12, 2.2), metalSkin);
-                wingL.position.set(-absoluteWingWidth/4 - 0.8, -0.1, -0.5); wingL.rotation.y = 0.25; wingL.rotation.z = 0.05;
-                const wingR = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.12, 2.2), metalSkin);
-                wingR.position.set(absoluteWingWidth/4 + 0.8, -0.1, -0.5); wingR.rotation.y = -0.25; wingR.rotation.z = -0.05;
-                mainBody.add(wingL, wingR);
-            } else if (activeProfile.type === "prop") {
-                const wingL = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.08, 1.4), metalSkin);
-                wingL.position.set(-absoluteWingWidth/4 - 0.3, 0.1, -0.4);
-                const wingR = wingL.clone(); wingR.position.x = absoluteWingWidth/4 + 0.3;
-                mainBody.add(wingL, wingR);
-            } else {
-                const wingL = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.05, 2.0), metalSkin);
-                wingL.position.set(-absoluteWingWidth/4 - 0.5, -0.05, 0.3); wingL.rotation.y = 0.35;
-                const wingR = new THREE.Mesh(new THREE.BoxGeometry(absoluteWingWidth/2, 0.05, 2.0), metalSkin);
-                wingR.position.set(absoluteWingWidth/4 + 0.5, -0.05, 0.3); wingR.rotation.y = -0.35;
-                mainBody.add(wingL, wingR);
-            }
-
-            // 3. Tail Configuration Assignments
-            if (activeProfile.type === "heavy" || activeProfile.type === "prop") {
-                const tailVert = new THREE.Mesh(new THREE.BoxGeometry(0.08, activeProfile.type==="heavy"?2.8:1.3, 1.4), metalSkin);
-                tailVert.position.set(0, activeProfile.type==="heavy"?2.2:0.9, activeProfile.type==="heavy"?4.0:2.4);
-                mainBody.add(tailVert);
-            } else {
-                const finL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.5, 1.1), metalSkin);
-                finL.position.set(-0.6, 0.9, 2.4); finL.rotation.z = 0.22;
-                const finR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.5, 1.1), metalSkin);
-                finR.position.set(0.6, 0.9, 2.4); finR.rotation.z = -0.22;
-                mainBody.add(finL, finR);
-            }
-
-            // 4. Heavy Engine Pod Installations
-            if (activeProfile.type === "heavy") {
-                let spacing = absoluteWingWidth * 0.22;
-                let podPositions = [-spacing*1.8, -spacing*0.9, spacing*0.9, spacing*1.8];
-                podPositions.forEach(posX => {
-                    const enginePod = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.35, 1.6, 10), steelMat);
-                    enginePod.rotation.x = Math.PI / 2; enginePod.position.set(posX, -0.6, -0.2);
-                    mainBody.add(enginePod);
-                });
-            } else if (activeProfile.type === "prop") {
-                const hub = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.6, 8), steelMat);
-                hub.rotateX(-Math.PI/2); hub.position.set(0, 0, -2.9);
-                const blade = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.14, 0.04), steelMat);
-                hub.add(blade); mainBody.add(hub); propEngineBlades.push(blade);
-            } else {
-                const portL = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.5, 12), steelMat);
-                portL.rotation.x = Math.PI/2; portL.position.set(-0.32, -0.05, 2.9);
-                const portR = portL.clone(); portR.position.x = 0.32;
-                const torchG = new THREE.ConeGeometry(0.16, 2.2, 8); torchG.rotateX(-Math.PI/2);
-                leftExhaustGlow = new THREE.Mesh(torchG, new THREE.MeshBasicMaterial({ color: 0x3388ff, transparent: true, opacity: 0.75 }));
-                leftExhaustGlow.position.z = 1.2; rightExhaustGlow = leftExhaustGlow.clone();
-                portL.add(leftExhaustGlow); portR.add(rightExhaustGlow); mainBody.add(portL, portR);
-                leftExhaustGlow.visible = false; rightExhaustGlow.visible = false;
-            }
-
-            // 5. Tactical Weapon Rig Additions
-            if (activeProfile.isMilitary) {
-                const barrelL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4), steelMat);
-                barrelL.rotation.x = Math.PI/2; barrelL.position.set(-0.7, -0.15, -1.5);
-                const barrelR = barrelL.clone(); barrelR.position.x = 0.7;
-                mainBody.add(barrelL, barrelR);
-
-                const rocketL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-                rocketL.rotation.x = Math.PI/2; rocketL.position.set(-absoluteWingWidth/2, -0.2, 0);
-                const rocketR = rocketL.clone(); rocketR.position.x = absoluteWingWidth/2;
-                mainBody.add(rocketL, rocketR);
-            }
-
-            // 6. Support Struts Assembly Units
-            const strutG = new THREE.CylinderGeometry(0.04, 0.04, 1.1);
-            const wheelG = new THREE.CylinderGeometry(0.26, 0.26, 0.14); wheelG.rotateZ(Math.PI/2);
-            const tireSkin = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.95 });
-
-            leftGearGroup = new THREE.Group(); const sL = new THREE.Mesh(strutG, steelMat); const tL = new THREE.Mesh(wheelG, tireSkin); tL.position.y = -0.55; leftGearGroup.add(sL, tL); leftGearGroup.position.set(-1.1, -0.5, 0);
-            rightGearGroup = new THREE.Group(); const sR = new THREE.Mesh(strutG, steelMat); const tR = new THREE.Mesh(wheelG, tireSkin); tR.position.y = -0.55; rightGearGroup.add(sR, tR); rightGearGroup.position.set(1.1, -0.5, 0);
-            
-            mainBody.add(leftGearGroup, rightGearGroup);
-            aircraftGroup.add(mainBody);
-        }
-
-        // --- HANGAR CONTROL INTERFACING CORE INJECTIONS ---
-        const fleetGrid = document.getElementById('fleet-grid');
-        Object.keys(fleetProfiles).forEach((k, idx) => {
-            const plane = fleetProfiles[k];
-            const badge = plane.isMilitary ? '<span class="card-class class-mil">MILITARY</span>' : '<span class="card-class class-civ">CIVILIAN</span>';
-            fleetGrid.innerHTML += `
-                <div class="card-option ${idx === 0 ? 'active' : ''}" onclick="selectHangarPlane('${k}', this)">
-                    <div class="card-title">${plane.name} ${badge}</div>
-                    <div class="card-desc">Structural class: ${plane.type.toUpperCase()}. Base engine envelope tracking target up to ${Math.floor(plane.speed*220)} mph.</div>
-                </div>
-            `;
-        });
-
-        function selectHangarPlane(key, element) {
-            selectedType = key; activeProfile = fleetProfiles[key];
-            document.querySelectorAll('.card-option').forEach(item => item.classList.remove('active'));
-            element.classList.add('active');
-            document.getElementById('weapon-custom-box').style.display = activeProfile.isMilitary ? 'block' : 'none';
-        }
-
-        function setSkin(id, desc, element) {
-            customSkin = id; document.getElementById('lbl-skin').innerText = desc;
-            const buttons = element.parentNode.querySelectorAll('.color-btn');
-            buttons.forEach(b => b.classList.remove('active')); element.classList.add('active');
-        }
-
-        function updateWingValue(val) {
-            customWingspanScale = parseFloat(val);
-            document.getElementById('lbl-wingspan').innerText = val + "x";
-        }
-
-        function setLaser(id, desc, element) {
-            customLaserColor = id; document.getElementById('lbl-laser').innerText = desc;
-            const buttons = element.parentNode.querySelectorAll('.color-btn');
-            buttons.forEach(b => b.classList.remove('active')); element.classList.add('active');
-        }
-
-        function engageFlight() {
-            document.getElementById('entry-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('entry-screen').style.display = 'none';
-                document.getElementById('hud-container').style.display = 'block';
-                document.getElementById('active-plane-title').innerText = activeProfile.name;
-                document.getElementById('weapon-indicator').innerText = activeProfile.isMilitary ? `AUTOCANNON (G)` : "NONE";
-                document.getElementById('weapon-indicator').style.color = activeProfile.isMilitary ? "#ff3333" : "#8b9bb4";
-
-                integrity = 100; speed = activeProfile.speed;
-                cameraOrbitTheta = 0; cameraOrbitPhi = 0.2; isMouseDragging = false;
-                aircraftGroup.position.set(0, 350, 0); aircraftGroup.rotation.set(0,0,0);
-                
-                manufactureAircraft();
-                flightActive = true;
-            }, 300);
-        }
-
-        function forceCrashState() {
-            flightActive = false; isMouseDragging = false;
-            document.getElementById('hud-container').style.display = 'none';
-            document.getElementById('death-screen').style.display = 'flex';
-        }
-
-        function returnToHangar() {
-            document.getElementById('death-screen').style.display = 'none';
-            document.getElementById('entry-screen').style.display = 'flex'; document.getElementById('entry-screen').style.opacity = '1';
-        }
-
-        // --- MOUSE MAPPING POV INTERCEPT HANDLERS ---
-        window.addEventListener('mousedown', (e) => {
-            if (!flightActive) return;
-            isMouseDragging = true;
-            lastMouseCoordinateX = e.clientX;
-            lastMouseCoordinateY = e.clientY;
-            document.getElementById('pov-state').innerText = "MANUAL ORBIT";
-            document.getElementById('pov-state').style.color = "#ffaa00";
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (!flightActive || !isMouseDragging) return;
-            let deltaX = e.clientX - lastMouseCoordinateX;
-            let deltaY = e.clientY - lastMouseCoordinateY;
-
-            cameraOrbitTheta += deltaX * 0.015;
-            cameraOrbitPhi = Math.max(-0.6, Math.min(1.2, cameraOrbitPhi + deltaY * 0.012));
-
-            lastMouseCoordinateX = e.clientX;
-            lastMouseCoordinateY = e.clientY;
-        });
-
-        window.addEventListener('mouseup', () => {
-            if (!flightActive) return;
-            isMouseDragging = false;
-            document.getElementById('pov-state').innerText = "AUTO-TRACK";
-            document.getElementById('pov-state').style.color = "#00ff66";
-        });
-
-        // --- WEAPON LAUNCH EXECUTIONS ---
-        function fireLaserCannon() {
-            if (!activeProfile.isMilitary) return;
-            
-            const laserGeo = new THREE.CylinderGeometry(0.06, 0.06, 4.2); laserGeo.rotateX(Math.PI/2);
-            const laserMat = new THREE.MeshBasicMaterial({ color: laserHexMap[customLaserColor] });
-            
-            [-0.7, 0.7].forEach(offset => {
-                const laser = new THREE.Mesh(laserGeo, laserMat);
-                laser.position.copy(aircraftGroup.position);
-                laser.rotation.copy(aircraftGroup.rotation);
-                laser.translateX(offset);
-                
-                const headingVector = new THREE.Vector3(0, 0, -1).applyQuaternion(aircraftGroup.quaternion);
-                laserProjectiles.push({ mesh: laser, vector: headingVector, life: 60 });
-                scene.add(laser);
-            });
-        }
-
-        // --- KEYSTROKE CAPTURES ---
-        window.onkeydown = (e) => {
-            const key = e.key.toLowerCase(); inputState[key] = true;
-            if (key === 'r' && !flightActive && integrity <= 0) returnToHangar();
-        };
-        window.onkeyup = (e) => { inputState[e.key.toLowerCase()] = false; };
-
-        // --- RUNTIME SIMULATION LOOPS ---
-        function runSimulationLoops() {
-            if (!flightActive) return;
-
-            let rollingSpeedModifier = activeProfile.rollRate * (1.3 - (customWingspanScale * 0.25));
-
-            if (inputState['w']) aircraftGroup.rotateX(activeProfile.pitchRate);
-            if (inputState['s']) aircraftGroup.rotateX(-activeProfile.pitchRate);
-            if (inputState['a']) aircraftGroup.rotateZ(rollingSpeedModifier);
-            if (inputState['d']) aircraftGroup.rotateZ(-rollingSpeedModifier);
-            if (inputState['q']) aircraftGroup.rotateY(activeProfile.pitchRate * 0.6);
-            if (inputState['e']) aircraftGroup.rotateY(-activeProfile.pitchRate * 0.6);
-
-            if (inputState['g']) { fireLaserCannon(); inputState['g'] = false; }
-
-            if (inputState[' ']) {
-                targetSpeed = activeProfile.speed * 1.6;
-                if (leftExhaustGlow) { leftExhaustGlow.visible = true; rightExhaustGlow.visible = true; }
-            } else {
-                targetSpeed = activeProfile.speed;
-                if (leftExhaustGlow) { leftExhaustGlow.visible = false; rightExhaustGlow.visible = false; }
-            }
-            speed = THREE.MathUtils.lerp(speed, targetSpeed, 0.05);
-            aircraftGroup.position.y -= activeProfile.mass * (1.1 - (speed / (activeProfile.speed * 1.6)));
-            aircraftGroup.translateZ(-speed);
-
-            propEngineBlades.forEach(b => { b.rotation.z += speed * 0.65; });
-
-            if (aircraftGroup.position.y < 45) {
-                isGearDeployed = true;
-                leftGearGroup.scale.setScalar(1); rightGearGroup.scale.setScalar(1);
-            } else {
-                isGearDeployed = false;
-                leftGearGroup.scale.setScalar(0); rightGearGroup.scale.setScalar(0);
-            }
-
-            for (let i = laserProjectiles.length - 1; i >= 0; i--) {
-                let projectile = laserProjectiles[i];
-                projectile.mesh.position.addScaledVector(projectile.vector, 12.0);
-                projectile.life--;
-                if (projectile.life <= 0) {
-                    scene.remove(projectile.mesh);
-                    laserProjectiles.splice(i, 1);
-                }
-            }
-
-            // --- ACCURATE AABB FLIGHT BOUNDING BOX INTERSECTS ---
-            let px = aircraftGroup.position.x;
-            let py = aircraftGroup.position.y;
-            let pz = aircraftGroup.position.z;
-
-            let calculatedWingReach = (activeProfile.type === "heavy" ? 6.0 : (activeProfile.type === "prop" ? 3.25 : 3.9)) * customWingspanScale;
-
-            let planeAABB = {
-                minX: px - calculatedWingReach, maxX: px + calculatedWingReach,
-                minY: py - 0.6, maxY: py + 1.2,
-                minZ: pz - 4.5, maxZ: pz + 4.5
-            };
-
-            let currentGroundAltitude = lookupHeight(px, pz);
-            if (py <= currentGroundAltitude + 0.8) {
-                if (!isGearDeployed || speed > activeProfile.speed * 1.25) {
-                    integrity = 0; forceCrashState(); return;
-                }
-            }
-
-            for (let i = 0; i < terrainObstacles.length; i++) {
-                let obs = terrainObstacles[i];
-                let hitX = planeAABB.maxX >= obs.minX && planeAABB.minX <= obs.maxX;
-                let hitY = planeAABB.maxY >= obs.minY && planeAABB.minY <= obs.maxY;
-                let hitZ = planeAABB.maxZ >= obs.minZ && planeAABB.minZ <= obs.maxZ;
-
-                if (hitX && hitY && hitZ) {
-                    integrity = 0; forceCrashState(); return;
-                }
-            }
-
-            // Atmosphere Cycles
-            clockTime += 0.00005;
-            let cycleVal = (Math.sin(clockTime * Math.PI * 2) + 1) / 2;
-            scene.background.setHSL(0.58, 0.5, cycleVal * 0.4 + 0.1);
-            scene.fog.color.setHSL(0.58, 0.5, cycleVal * 0.4 + 0.1);
-
-            // Sync Telemetry Display Texts
-            document.getElementById('dash-alt').innerText = Math.floor(py * 3.3);
-            document.getElementById('dash-spd').innerText = Math.floor(speed * 220);
-            document.getElementById('dash-gear').innerText = isGearDeployed ? "DEPLOYED" : "RETRACTED";
-            document.getElementById('dash-gear').style.color = isGearDeployed ? "#00ff66" : "#ffaa00";
-            document.getElementById('dash-hull').innerText = integrity + "%";
-            
-            let hr = Math.floor((clockTime * 24) % 24).toString().padStart(2,'0');
-            let mn = Math.floor((clockTime * 1440) % 60).toString().padStart(2,'0');
-            document.getElementById('dash-time').innerText = `${hr}:${mn}`;
-        }
-
-        // --- RIGID INTERACTIVE ADVANCED MOUSE ORBIT RE-CENTER SPRING ---
-        function trackCameraSpring() {
-            if (!flightActive) return;
-
-            // Return camera orbit properties back to tail neutral when mouse is released
-            if (!isMouseDragging) {
-                cameraOrbitTheta = THREE.MathUtils.lerp(cameraOrbitTheta, 0, 0.08);
-                cameraOrbitPhi = THREE.MathUtils.lerp(cameraOrbitPhi, 0.16, 0.08);
-            }
-
-            // Calculate spherical displacement coordinate points relative to plane orientation
-            let cameraRadiusDistance = activeProfile.type === "heavy" ? 19.0 : 14.5;
-            
-            let sphericalOffset = new THREE.Vector3(
-                cameraRadiusDistance * Math.sin(cameraOrbitTheta) * Math.cos(cameraOrbitPhi),
-                cameraRadiusDistance * Math.sin(cameraOrbitPhi) + 2.2, // Elevation adjustment
-                cameraRadiusDistance * Math.cos(cameraOrbitTheta) * Math.cos(cameraOrbitPhi)
-            );
-
-            // Matrix Transform relative spatial positioning systems
-            let absoluteWorldOffset = sphericalOffset.applyMatrix4(aircraftGroup.matrixWorld);
-            camera.position.lerp(absoluteWorldOffset, 0.2); // Smooth position interpolation
-            
-            // Camera tracks slightly ahead of nose line
-            let targetLookPosition = new THREE.Vector3(0, 0.4, -3.0).applyMatrix4(aircraftGroup.matrixWorld);
-            camera.lookAt(targetLookPosition);
-        }
-
-        function renderEngineLoop() {
-            requestAnimationFrame(renderEngineLoop);
-            runSimulationLoops();
-            trackCameraSpring();
-            renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        renderEngineLoop();
-    </script>
+    <script src="aircraft.js"></script>
+    <script src="simulator.js"></script>
 </body>
-</html> 
+</html>
