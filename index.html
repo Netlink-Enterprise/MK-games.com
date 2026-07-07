@@ -26,13 +26,21 @@
             transition: opacity 0.3s ease;
         }
         
-        #mode-select-screen {
+        #welcome-screen {
             background: radial-gradient(circle at center, #0d1e36 0%, #020710 100%);
             color: white; 
             overflow-y: auto; 
             padding: 20px 0;
         }
         
+        #mode-select-screen {
+            background: radial-gradient(circle at center, #0d1e36 0%, #020710 100%);
+            color: white; 
+            overflow-y: auto; 
+            padding: 20px 0;
+            display: none;
+        }
+
         #entry-screen {
             background: radial-gradient(circle at center, #0d1e36 0%, #020710 100%);
             color: white; 
@@ -54,19 +62,18 @@
             display: none;
         }
 
-        .hangar-layout {
+        .welcome-layout {
             display: flex; 
-            flex-direction: row; 
+            flex-direction: column; 
             gap: 20px;
             background: rgba(6, 13, 26, 0.96); 
             border: 2px solid #1a365d;
-            padding: 25px; 
+            padding: 40px; 
             border-radius: 12px; 
             box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-            max-width: 1100px; 
-            width: 95%; 
-            margin: auto; 
-            height: 80vh;
+            max-width: 500px; 
+            width: 90%; 
+            margin: auto;
         }
 
         .mode-select-layout {
@@ -95,6 +102,21 @@
             max-width: 500px; 
             width: 90%; 
             margin: auto;
+        }
+
+        .hangar-layout {
+            display: flex; 
+            flex-direction: row; 
+            gap: 20px;
+            background: rgba(6, 13, 26, 0.96); 
+            border: 2px solid #1a365d;
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            max-width: 1100px; 
+            width: 95%; 
+            margin: auto; 
+            height: 80vh;
         }
 
         .panel-left { 
@@ -627,19 +649,55 @@
             margin: 10px 0;
             min-height: 20px;
         }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .form-row .input-field {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Welcome Screen - First screen users see -->
+    <div id="welcome-screen" class="overlay-screen">
+        <div class="welcome-layout">
+            <h1>SKY-BOUND FLIGHT</h1>
+            <h2>WELCOME PILOT</h2>
+            
+            <div class="form-group">
+                <label style="color: #ffd700; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">YOUR USERNAME</label>
+                <input type="text" id="username-input" class="input-field" placeholder="Enter your username...">
+            </div>
+            
+            <div class="form-group">
+                <label style="color: #ffd700; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">PASSWORD (OPTIONAL)</label>
+                <input type="password" id="password-input" class="input-field" placeholder="Enter password for admin...">
+            </div>
+            
+            <button class="btn-main" onclick="submitLogin()">CONTINUE</button>
+            <button class="btn-secondary" onclick="skipLogin()">SKIP (GUEST)</button>
+            
+            <div id="welcome-error" class="error-message"></div>
+        </div>
+    </div>
+
     <!-- Mode Select Screen -->
     <div id="mode-select-screen" class="overlay-screen">
         <div class="mode-select-layout">
-            <h1>SKY-BOUND FLIGHT</h1>
-            <h2>SELECT GAME MODE</h2>
+            <h1>SELECT GAME MODE</h1>
             
             <button class="btn-main" onclick="selectSinglePlayer()">SINGLEPLAYER</button>
             <button class="btn-main" onclick="selectMultiPlayer()">MULTIPLAYER</button>
-            <button class="btn-secondary" onclick="showAdminLogin()">ADMIN PANEL</button>
             
             <div id="mode-error" class="error-message"></div>
         </div>
@@ -844,6 +902,34 @@
             panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         }
         
+        function submitLogin() {
+            const username = document.getElementById('username-input').value.trim();
+            const password = document.getElementById('password-input').value;
+            
+            if (username && username !== '') {
+                currentUsername = username.substring(0, 20);
+                
+                // Check if password is admin password
+                if (password === 'mb12348765') {
+                    isAdmin = true;
+                    currentUsername = 'ADMIN';
+                }
+                
+                document.getElementById('welcome-screen').style.display = 'none';
+                document.getElementById('mode-select-screen').style.display = 'flex';
+                document.getElementById('username-display').innerText = 'PILOT: ' + currentUsername;
+            } else {
+                document.getElementById('welcome-error').innerText = 'Please enter a username!';
+            }
+        }
+        
+        function skipLogin() {
+            currentUsername = 'GUEST';
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('mode-select-screen').style.display = 'flex';
+            document.getElementById('username-display').innerText = 'PILOT: GUEST';
+        }
+        
         function selectSinglePlayer() {
             gameMode = 'singleplayer';
             document.getElementById('game-mode-indicator').innerText = 'MODE: SINGLEPLAYER';
@@ -858,23 +944,11 @@
             gameMode = 'multiplayer';
             document.getElementById('game-mode-indicator').innerText = 'MODE: MULTIPLAYER';
             document.getElementById('mode-select-screen').style.display = 'none';
-            
-            // Show username prompt
-            const username = prompt('Enter your username for multiplayer:');
-            if (username && username.trim() !== '') {
-                currentUsername = username.trim().substring(0, 20);
-                document.getElementById('current-username').innerText = currentUsername;
-                document.getElementById('username-display').innerText = 'PILOT: ' + currentUsername;
-                document.getElementById('entry-screen').style.display = 'flex';
-                document.getElementById('entry-screen').style.opacity = '1';
-                document.getElementById('multiplayer-ui').style.display = 'flex';
-                document.getElementById('player-list').style.display = 'block';
-                
-                // Add self to player list
-                updatePlayerList();
-            } else {
-                document.getElementById('mode-select-screen').style.display = 'flex';
-            }
+            document.getElementById('entry-screen').style.display = 'flex';
+            document.getElementById('entry-screen').style.opacity = '1';
+            document.getElementById('multiplayer-ui').style.display = 'flex';
+            document.getElementById('player-list').style.display = 'block';
+            updatePlayerList();
         }
         
         function showAdminLogin() {
@@ -893,8 +967,10 @@
             if (password === 'mb12348765') {
                 isAdmin = true;
                 currentUsername = 'ADMIN';
+                gameMode = 'multiplayer';
                 document.getElementById('current-username').innerText = 'ADMIN';
                 document.getElementById('username-display').innerText = 'PILOT: ADMIN';
+                document.getElementById('game-mode-indicator').innerText = 'MODE: ADMIN';
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('entry-screen').style.display = 'flex';
                 document.getElementById('entry-screen').style.opacity = '1';
@@ -913,20 +989,19 @@
             const buttons = element.parentNode.querySelectorAll('.color-btn');
             buttons.forEach(b => b.classList.remove('active'));
             element.classList.add('active');
+            updatePlayerList();
         }
         
         function updatePlayerList() {
             const playerList = document.getElementById('player-list');
             playerList.innerHTML = '<div style="color: #ffd700; font-weight: bold; margin-bottom: 5px;">ONLINE PILOTS</div>';
             
-            // Add current player
             playerList.innerHTML += `
                 <div class="player-item" style="color: #00ff66;">
                     ${currentUsername} (YOU)
                 </div>
             `;
             
-            // Add bots if in multiplayer
             if (gameMode === 'multiplayer' && botDifficulty !== 'none') {
                 const botCount = botDifficulty === 'easy' ? 2 : botDifficulty === 'medium' ? 4 : 6;
                 for (let i = 1; i <= botCount; i++) {
