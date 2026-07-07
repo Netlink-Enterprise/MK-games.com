@@ -312,10 +312,6 @@
             color: #fff;
         }
         
-        .dashboard-value span {
-            color: #00ff66;
-        }
-        
         .dashboard-value.warning {
             color: #ffaa00;
         }
@@ -324,74 +320,59 @@
             color: #ff3333;
         }
         
-        /* Attitude Indicator */
-        #attitude-indicator {
-            grid-column: span 2;
+        /* Gauge Container */
+        .gauge-container {
+            grid-column: span 1;
             position: relative;
-            height: 120px;
-            background: radial-gradient(circle at center, #0a1520 0%, #020710 100%);
-            border: 2px solid #17b978;
-            border-radius: 50%;
-            overflow: hidden;
+            height: 100px;
+            width: 100%;
         }
         
-        #attitude-horizon {
+        .gauge {
             position: absolute;
-            top: 50%;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #00ff66, transparent);
-            transform: translateY(-50%);
-        }
-        
-        #attitude-pitch {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 60px;
-            background: #ffd700;
-            transform: translate(-50%, -50%);
-        }
-        
-        /* Compass */
-        #compass {
-            grid-column: span 2;
-            position: relative;
-            height: 120px;
+            height: 100%;
             background: #050d1a;
             border: 2px solid #1a365d;
             border-radius: 50%;
             overflow: hidden;
         }
         
-        #compass-rose {
+        .gauge-needle {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 80%;
-            height: 80%;
-            background: radial-gradient(circle, #0a1520 0%, #020710 100%);
-            border: 1px solid #10223b;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 0.6em;
-            color: #00ff66;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 2px;
+            height: 40%;
+            background: #ffd700;
+            transform-origin: center bottom;
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform 0.1s ease;
         }
         
-        #compass-needle {
+        .gauge-label {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 40%;
-            height: 2px;
-            background: #ffd700;
-            transform-origin: center;
-            transform: translate(-50%, -50%) rotate(0deg);
+            bottom: 5%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #00ff66;
+            font-size: 0.7em;
+            font-family: monospace;
+        }
+        
+        .gauge-value {
+            position: absolute;
+            top: 25%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-size: 1.0em;
+            font-weight: bold;
+            font-family: monospace;
         }
         
         /* How to Play Panel */
@@ -492,72 +473,6 @@
             text-align: right; 
             text-shadow: 1px 1px 2px #000; 
             pointer-events: none;
-        }
-        
-        /* Altimeter and Speed Gauges */
-        .gauge-container {
-            grid-column: span 1;
-            position: relative;
-            height: 120px;
-            width: 100%;
-        }
-        
-        .gauge {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #050d1a;
-            border: 2px solid #1a365d;
-            border-radius: 50%;
-            overflow: hidden;
-        }
-        
-        .gauge-arc {
-            position: absolute;
-            top: 10%;
-            left: 10%;
-            width: 80%;
-            height: 80%;
-            border: 2px solid #10223b;
-            border-radius: 50%;
-            border-top-color: transparent;
-            border-bottom-color: transparent;
-        }
-        
-        .gauge-needle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 40%;
-            background: #ffd700;
-            transform-origin: center bottom;
-            transform: translateX(-50%) rotate(0deg);
-        }
-        
-        .gauge-label {
-            position: absolute;
-            bottom: 5%;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: #00ff66;
-            font-size: 0.7em;
-            font-family: monospace;
-        }
-        
-        .gauge-value {
-            position: absolute;
-            top: 25%;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: #fff;
-            font-size: 1.2em;
-            font-weight: bold;
-            font-family: monospace;
         }
     </style>
 </head>
@@ -668,9 +583,8 @@
                 <!-- Altimeter -->
                 <div class="gauge-container">
                     <div class="gauge">
-                        <div class="gauge-arc"></div>
                         <div class="gauge-needle" id="alt-needle"></div>
-                        <div class="gauge-label">ALTITUDE</div>
+                        <div class="gauge-label">ALT (ft)</div>
                         <div class="gauge-value" id="alt-value">0</div>
                     </div>
                 </div>
@@ -678,31 +592,10 @@
                 <!-- Speed -->
                 <div class="gauge-container">
                     <div class="gauge">
-                        <div class="gauge-arc"></div>
                         <div class="gauge-needle" id="speed-needle"></div>
-                        <div class="gauge-label">SPEED</div>
+                        <div class="gauge-label">SPEED (mph)</div>
                         <div class="gauge-value" id="speed-value">0</div>
                     </div>
-                </div>
-                
-                <!-- Attitude Indicator -->
-                <div class="dashboard-panel" id="attitude-indicator">
-                    <div class="dashboard-title">ATTITUDE</div>
-                    <div id="attitude-horizon"></div>
-                    <div id="attitude-pitch"></div>
-                </div>
-                
-                <!-- Compass -->
-                <div class="dashboard-panel" id="compass">
-                    <div class="dashboard-title">COMPASS</div>
-                    <div id="compass-rose">N</div>
-                    <div id="compass-needle"></div>
-                </div>
-                
-                <!-- Vertical Speed -->
-                <div class="dashboard-panel">
-                    <div class="dashboard-title">VERTICAL SPEED</div>
-                    <div class="dashboard-value" id="vs-value">0</div>
                 </div>
                 
                 <!-- Gear Status -->
@@ -717,16 +610,16 @@
                     <div class="dashboard-value" id="integrity-value">100%</div>
                 </div>
                 
+                <!-- Vertical Speed -->
+                <div class="dashboard-panel">
+                    <div class="dashboard-title">V/S (fpm)</div>
+                    <div class="dashboard-value" id="vs-value">0</div>
+                </div>
+                
                 <!-- Time -->
                 <div class="dashboard-panel">
                     <div class="dashboard-title">TIME</div>
                     <div class="dashboard-value" id="time-value">12:00</div>
-                </div>
-                
-                <!-- Weapon Status -->
-                <div class="dashboard-panel">
-                    <div class="dashboard-title">WEAPON</div>
-                    <div class="dashboard-value" id="weapon-value">NONE</div>
                 </div>
             </div>
         </div>

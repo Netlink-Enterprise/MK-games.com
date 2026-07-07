@@ -21,9 +21,6 @@ let propEngineBlades = [];
 // Track previous values for gauges
 let prevAltitude = 0;
 let prevSpeed = 0;
-let prevPitch = 0;
-let prevRoll = 0;
-let prevHeading = 0;
 
 // --- GRAPHICS ENVIRONMENT SETUP ---
 const scene = new THREE.Scene();
@@ -185,8 +182,6 @@ function engageFlight() {
         document.getElementById('entry-screen').style.display = 'none';
         document.getElementById('hud-container').style.display = 'block';
         document.getElementById('active-plane-title').innerText = activeProfile.name;
-        document.getElementById('weapon-value').innerText = activeProfile.isMilitary ? 'ARMED' : 'NONE';
-        document.getElementById('weapon-value').style.color = activeProfile.isMilitary ? '#ff3333' : '#8b9bb4';
 
         integrity = 100; 
         speed = activeProfile.speed;
@@ -199,9 +194,6 @@ function engageFlight() {
         // Reset gauge values
         prevAltitude = 0;
         prevSpeed = 0;
-        prevPitch = 0;
-        prevRoll = 0;
-        prevHeading = 0;
         
         manufactureAircraft();
         flightActive = true;
@@ -406,51 +398,28 @@ function runSimulationLoops() {
 
 // Update the enhanced dashboard
 function updateDashboard(altitude, speedVal) {
-    // Check if dashboard elements exist
+    // Get all dashboard elements safely
     const altNeedle = document.getElementById('alt-needle');
     const altValue = document.getElementById('alt-value');
     const speedNeedle = document.getElementById('speed-needle');
     const speedValue = document.getElementById('speed-value');
-    const horizon = document.getElementById('attitude-horizon');
-    const pitchLine = document.getElementById('attitude-pitch');
-    const compassNeedle = document.getElementById('compass-needle');
-    const vsValue = document.getElementById('vs-value');
     const gearValue = document.getElementById('gear-value');
     const integrityValue = document.getElementById('integrity-value');
+    const vsValue = document.getElementById('vs-value');
     const timeValue = document.getElementById('time-value');
     
-    if (!altNeedle || !altValue || !speedNeedle || !speedValue) return;
-    
     // Altimeter
-    const altRotation = Math.min(180, altitude / 2);
-    altNeedle.style.transform = `translateX(-50%) rotate(${180 - altRotation}deg)`;
-    altValue.innerText = Math.floor(altitude);
+    if (altNeedle && altValue) {
+        const altRotation = Math.min(180, altitude / 2);
+        altNeedle.style.transform = `translateX(-50%) rotate(${180 - altRotation}deg)`;
+        altValue.innerText = Math.floor(altitude);
+    }
     
     // Speed gauge
-    const speedRotation = Math.min(180, speedVal / 2);
-    speedNeedle.style.transform = `translateX(-50%) rotate(${180 - speedRotation}deg)`;
-    speedValue.innerText = Math.floor(speedVal);
-    
-    // Attitude indicator
-    if (horizon && pitchLine) {
-        const pitch = aircraftGroup.rotation.x * (180 / Math.PI);
-        const roll = aircraftGroup.rotation.z * (180 / Math.PI);
-        const pitchPercent = (pitch / 180) * 50;
-        horizon.style.transform = `translateY(calc(-50% + ${pitchPercent}%))`;
-        pitchLine.style.transform = `translate(-50%, -50%) rotate(${roll}deg)`;
-    }
-    
-    // Compass
-    if (compassNeedle) {
-        const heading = aircraftGroup.rotation.y * (180 / Math.PI);
-        compassNeedle.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
-    }
-    
-    // Vertical speed
-    if (vsValue) {
-        const verticalSpeed = (prevAltitude - altitude) * 10;
-        vsValue.innerText = Math.floor(verticalSpeed);
-        vsValue.className = verticalSpeed > 50 ? 'dashboard-value danger' : verticalSpeed < -50 ? 'dashboard-value warning' : 'dashboard-value';
+    if (speedNeedle && speedValue) {
+        const speedRotation = Math.min(180, speedVal / 2);
+        speedNeedle.style.transform = `translateX(-50%) rotate(${180 - speedRotation}deg)`;
+        speedValue.innerText = Math.floor(speedVal);
     }
     
     // Gear
@@ -463,6 +432,13 @@ function updateDashboard(altitude, speedVal) {
     if (integrityValue) {
         integrityValue.innerText = integrity + '%';
         integrityValue.className = integrity < 30 ? 'dashboard-value danger' : integrity < 70 ? 'dashboard-value warning' : 'dashboard-value';
+    }
+    
+    // Vertical speed
+    if (vsValue) {
+        const verticalSpeed = (prevAltitude - altitude) * 10;
+        vsValue.innerText = Math.floor(verticalSpeed);
+        vsValue.className = verticalSpeed > 50 ? 'dashboard-value danger' : verticalSpeed < -50 ? 'dashboard-value warning' : 'dashboard-value';
     }
     
     // Time
